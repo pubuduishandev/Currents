@@ -1,5 +1,15 @@
 <resources>
     <string name="app_name">Currents</string>
+    <string name="splash_tagline">The official news broadcaster of faculty of technology</string>
+    <string name="splash_developer_concept">Concept &amp; Developed by</string>
+    <string name="splash_developer_dept">Department of ICT</string>
+    <string name="splash_developer_faculty">Faculty of Technology, University of Colombo</string>
+    <string name="app_version_name">V1.0.0.1</string>
+
+
+
+
+
     <string name="action_settings">Settings</string>
     <!-- Strings used for fragments for navigation -->
     <string name="first_fragment_label">First Fragment</string>

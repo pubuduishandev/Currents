@@ -1,8 +1,8 @@
-package com.example.currents;
+package com.example.currents.activity;
 
 import android.os.Bundle;
 
-import com.google.android.material.snackbar.Snackbar;
+import com.example.currents.R;
 
 import androidx.appcompat.app.AppCompatActivity;
 
@@ -39,9 +39,11 @@ public class MainActivity extends AppCompatActivity {
         binding.fab.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View view) {
-                Snackbar.make(view, "Replace with your own action", Snackbar.LENGTH_LONG)
-                        .setAnchorView(R.id.fab)
-                        .setAction("Action", null).show();
+                new androidx.appcompat.app.AlertDialog.Builder(MainActivity.this)
+                        .setTitle("FAB Clicked")
+                        .setMessage("You clicked the Floating Action Button!")
+                        .setPositiveButton("OK", null)
+                        .show();
             }
         });
     }

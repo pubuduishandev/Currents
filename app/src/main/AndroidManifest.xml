@@ -13,9 +13,10 @@
         android:theme="@style/Theme.Currents"
         tools:targetApi="31">
         <activity
-            android:name=".MainActivity"
+            android:name=".activity.SplashActivity"
             android:exported="true"
-            android:theme="@style/Theme.Currents">
+            android:theme="@style/Theme.Currents"
+            android:noHistory="true">
             <intent-filter>
                 <action android:name="android.intent.action.MAIN" />
 
