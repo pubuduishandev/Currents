@@ -1,5 +1,6 @@
 package com.example.currents.activity;
 
+import android.content.Intent;
 import android.os.Bundle;
 import android.os.Handler;
 import android.os.Looper;
@@ -7,6 +8,7 @@ import android.os.Looper;
 import androidx.appcompat.app.AppCompatActivity;
 
 import com.example.currents.R;
+import com.example.currents.auth.LoginActivity;
 
 public class SplashActivity extends AppCompatActivity{
     // Duration of the splash screen in milliseconds
@@ -17,11 +19,12 @@ public class SplashActivity extends AppCompatActivity{
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_splash);
 
-        // Use a Handler to delay the execution
         new Handler(Looper.getMainLooper()).postDelayed(() -> {
-            // Finish the SplashActivity after the duration
-            // Since no next activity is started, the app will close or
-            // return to the previous app if launched from recent tasks.
+            // Create an Intent to start the LoginActivity
+            Intent intent = new Intent(SplashActivity.this, LoginActivity.class);
+            startActivity(intent);
+
+            // Finish the SplashActivity so the user cannot go back to it
             finish();
         }, SPLASH_SCREEN_DURATION);
     }

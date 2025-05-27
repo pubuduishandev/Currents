@@ -1,9 +1,15 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
-    <color name="black">#FF000000</color>
-    <color name="white">#FFFFFFFF</color>
-
-
-    <color name="splash_background_color">#FFFFFF</color>
-    <color name="splash_text_color">#000000</color>
+    <color name="primary_color">#103860</color>
+    <color name="secondary_color">#000000</color>
+    <color name="button_text_color">#FFFFFF</color>
+    <color name="background_color">#FFFFFF</color>
+    <color name="text_primary">#000000</color>
+    <color name="text_secondary">#757575</color>
+    <color name="button_background_primary">#2196F3</color>
+    <color name="button_text_primary">#FFFFFF</color>
+    <color name="button_google_background">#FFFFFF</color>
+    <color name="button_google_text">#757575</color>
+    <color name="divider_color">#E0E0E0</color>
+    <color name="link_text_color">#2196F3</color>
 </resources>

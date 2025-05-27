@@ -6,9 +6,15 @@
     <string name="splash_developer_faculty">Faculty of Technology, University of Colombo</string>
     <string name="app_version_name">V1.0.0.1</string>
 
-
-
-
+    <string name="welcome_back">Login</string>
+    <string name="login_to_continue">Hello, welcome back</string>
+    <string name="email_hint">Email</string>
+    <string name="password_hint">Password</string>
+    <string name="forgot_password">Forgot Password?</string>
+    <string name="login_button">Login</string>
+    <string name="or_text">OR</string>
+    <string name="don_t_have_account">Don\'t have an account?</string>
+    <string name="sign_up_link">Sign Up</string>
 
     <string name="action_settings">Settings</string>
     <!-- Strings used for fragments for navigation -->
