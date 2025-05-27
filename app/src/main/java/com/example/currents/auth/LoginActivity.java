@@ -76,11 +76,9 @@ public class LoginActivity extends AppCompatActivity {
         signupTextContainer.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
-                // Placeholder for Sign Up navigation
-                Toast.makeText(LoginActivity.this, "Sign Up Clicked", Toast.LENGTH_SHORT).show();
-                // Example: Intent to SignUpActivity
-                // Intent intent = new Intent(LoginActivity.this, SignUpActivity.class);
-                // startActivity(intent);
+                // Redirect to SignupActivity
+                Intent intent = new Intent(LoginActivity.this, SignupActivity.class);
+                startActivity(intent);
             }
         });
     }

@@ -1,4 +1,5 @@
 <resources>
+    //Splash Screen
     <string name="app_name">Currents</string>
     <string name="splash_tagline">The official news broadcaster of faculty of technology</string>
     <string name="splash_developer_concept">Concept &amp; Developed by</string>
@@ -6,6 +7,7 @@
     <string name="splash_developer_faculty">Faculty of Technology, University of Colombo</string>
     <string name="app_version_name">V1.0.0.1</string>
 
+    //Login Screen
     <string name="welcome_back">Login</string>
     <string name="login_to_continue">Hello, welcome back</string>
     <string name="email_hint">Email</string>
@@ -15,6 +17,32 @@
     <string name="or_text">OR</string>
     <string name="don_t_have_account">Don\'t have an account?</string>
     <string name="sign_up_link">Sign Up</string>
+
+
+    //Signup Screen
+    <string name="signup_header">Sign Up</string>
+    <string name="signup_instructions">Just have to quick things to get started</string>
+    <string name="first_name_hint">First Name</string>
+    <string name="last_name_hint">Last Name</string>
+    <string name="username_hint">Username</string>
+    <string name="email_hint_signup">Email</string>
+    <string name="password_hint_signup">Password</string>
+    <string name="confirm_password_hint">Confirm Password</string>
+    <string name="sign_up_button">Sign Up</string>
+    <string name="already_have_account">Already have an account?</string>
+    <string name="login_link">Login</string>
+    <string name="signup_success">Sign Up Successful</string>
+    <string name="signup_success_message">You have successfully signed up. Please log in to continue.</string>
+
+
+
+
+
+
+
+
+
+
 
     <string name="action_settings">Settings</string>
     <!-- Strings used for fragments for navigation -->
