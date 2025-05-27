@@ -1,5 +1,5 @@
 // File: app/src/main/java/com/example/currents/auth/LoginActivity.java
-package com.example.currents.auth;
+package com.example.currents.activity;
 
 import android.content.Intent;
 import android.os.Bundle;
@@ -11,7 +11,6 @@ import android.widget.Toast;
 import androidx.appcompat.app.AppCompatActivity;
 
 import com.example.currents.R; // Make sure R.java is correctly generated for your project
-import com.example.currents.activity.MainActivity; // Assuming you will have a MainActivity after successful login
 import com.google.android.material.button.MaterialButton;
 import com.google.android.material.textfield.TextInputEditText;
 

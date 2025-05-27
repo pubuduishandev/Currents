@@ -8,7 +8,6 @@ import android.os.Looper;
 import androidx.appcompat.app.AppCompatActivity;
 
 import com.example.currents.R;
-import com.example.currents.auth.LoginActivity;
 
 public class SplashActivity extends AppCompatActivity{
     // Duration of the splash screen in milliseconds

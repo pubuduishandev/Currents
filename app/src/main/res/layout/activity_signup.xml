@@ -9,7 +9,7 @@
     android:layout_width="match_parent"
     android:layout_height="wrap_content" android:background="@color/background_color"
     android:padding="24dp"
-    tools:context=".auth.SignupActivity">
+    tools:context=".activity.SignupActivity">
 
     <ImageView
         android:id="@+id/app_logo_horizontal"
