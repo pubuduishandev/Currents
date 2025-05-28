@@ -1,0 +1,18 @@
+<?xml version="1.0" encoding="utf-8"?>
+<menu xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto">
+    <item android:id="@+id/read_news"
+        android:icon="@drawable/read"
+        android:title="@string/search_hint"
+        app:showAsAction="always"/>
+
+    <item android:id="@+id/developer_info"
+        android:icon="@drawable/developer"
+        android:title="@string/search_hint"
+        app:showAsAction="always"/>
+
+    <item android:id="@+id/profile"
+        android:icon="@drawable/profile"
+        android:title="@string/profile_button"
+        app:showAsAction="always"/>
+</menu>

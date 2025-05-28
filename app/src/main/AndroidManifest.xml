@@ -31,6 +31,10 @@
         <activity
             android:name=".activity.SignupActivity"
             android:exported="false" />
+
+        <activity
+            android:name=".activity.HomeActivity"
+            android:exported="false" />
     </application>
 
 </manifest>

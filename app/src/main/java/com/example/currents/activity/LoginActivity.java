@@ -38,24 +38,10 @@ public class LoginActivity extends AppCompatActivity {
         loginButton.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
-                String email = emailEditText.getText().toString().trim();
-                String password = passwordEditText.getText().toString().trim();
-
-                if (email.isEmpty() || password.isEmpty()) {
-                    Toast.makeText(LoginActivity.this, "Please enter both email and password.", Toast.LENGTH_SHORT).show();
-                } else {
-                    // Placeholder for actual login logic
-                    // In a real app, you would integrate with an authentication system (e.g., Firebase, your own backend)
-                    if (email.equals("test@example.com") && password.equals("password")) {
-                        Toast.makeText(LoginActivity.this, "Login Successful!", Toast.LENGTH_SHORT).show();
-                        // Navigate to the main activity (e.g., MainActivity)
-                        Intent intent = new Intent(LoginActivity.this, MainActivity.class);
-                        startActivity(intent);
-                        finish(); // Finish LoginActivity so user can't go back
-                    } else {
-                        Toast.makeText(LoginActivity.this, "Invalid credentials.", Toast.LENGTH_SHORT).show();
-                    }
-                }
+                // Navigate to the main activity (e.g., MainActivity)
+                Intent intent = new Intent(LoginActivity.this, HomeActivity.class);
+                startActivity(intent);
+                finish(); // Finish LoginActivity so user can't go back
             }
         });
 
