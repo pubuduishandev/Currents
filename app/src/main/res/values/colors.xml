@@ -6,6 +6,12 @@
     <color name="background_color">#FFFFFF</color>
     <color name="text_primary">#000000</color>
     <color name="text_secondary">#757575</color>
+    <color name="error_color">#F44336</color>
+    <color name="success_color">#4CAF50</color>
+    <color name="warning_color">#FF9800</color>
+    <color name="info_color">#2196F3</color>
+    <color name="card_background">#fef7ff</color>
+
     <color name="button_background_primary">#2196F3</color>
     <color name="button_text_primary">#FFFFFF</color>
     <color name="button_google_background">#FFFFFF</color>

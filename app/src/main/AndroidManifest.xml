@@ -35,6 +35,34 @@
         <activity
             android:name=".activity.HomeActivity"
             android:exported="false" />
+
+        <activity
+            android:name=".activity.ProfileActivity"
+            android:exported="false" />
+
+        <activity
+            android:name=".activity.SavedNewsActivity"
+            android:exported="false" />
+
+        <activity
+            android:name=".activity.AboutActivity"
+            android:exported="false" />
+
+        <activity
+            android:name=".activity.ReadNewsActivity"
+            android:exported="false" />
+
+        <activity
+            android:name=".activity.ForgotPasswordActivity"
+            android:exported="false" />
+
+        <activity
+            android:name=".activity.VerifyOtpActivity"
+            android:exported="false" />
+
+        <activity
+            android:name=".activity.ResetPasswordActivity"
+            android:exported="false" />
     </application>
 
 </manifest>

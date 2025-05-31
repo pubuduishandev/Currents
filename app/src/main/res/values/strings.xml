@@ -44,6 +44,55 @@
     <string name="profile_button">Profile</string>
 
 
+    <style name="DeveloperInfoCard" parent="CardView.Light">
+        <item name="android:layout_width">match_parent</item>
+        <item name="android:layout_height">wrap_content</item>
+        <item name="cardCornerRadius">8dp</item>
+        <item name="cardElevation">0dp</item>
+        <item name="cardBackgroundColor">@color/card_background</item>
+        <item name="android:layout_marginStart">16dp</item>
+        <item name="android:layout_marginEnd">16dp</item>
+    </style>
+
+    <style name="DeveloperInfoCardContent">
+        <item name="android:layout_width">match_parent</item>
+        <item name="android:layout_height">wrap_content</item>
+        <item name="android:paddingTop">12dp</item>
+        <item name="android:paddingBottom">12dp</item>
+        <item name="android:paddingStart">16dp</item>
+        <item name="android:paddingEnd">16dp</item>
+    </style>
+
+    <style name="DeveloperInfoIcon">
+        <item name="android:layout_width">36dp</item>
+        <item name="android:layout_height">36dp</item>
+        <item name="android:background">@drawable/circle</item>
+        <item name="android:padding">8dp</item>
+    </style>
+
+
+    <string name="forgot_password_title">Forgot Password</string>
+    <string name="forgot_password_subtitle">Please enter your email address to authenticate</string>
+    <string name="request_otp_button">Request OTP</string>
+    <string name="back_to_login">Back to Login</string>
+    <string name="developer_info">Concept &amp; Developed by\nDepartment of ICT\nFaculty of Technology, University of Colombo</string>
+    <string name="version_info">V.1.0.0.1</string>
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 
 

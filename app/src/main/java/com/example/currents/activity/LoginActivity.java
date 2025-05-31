@@ -1,4 +1,3 @@
-// File: app/src/main/java/com/example/currents/auth/LoginActivity.java
 package com.example.currents.activity;
 
 import android.content.Intent;
@@ -51,9 +50,8 @@ public class LoginActivity extends AppCompatActivity {
             public void onClick(View v) {
                 // Placeholder for Forgot Password navigation
                 Toast.makeText(LoginActivity.this, "Forgot Password Clicked", Toast.LENGTH_SHORT).show();
-                // Example: Intent to ForgotPasswordActivity
-                // Intent intent = new Intent(LoginActivity.this, ForgotPasswordActivity.class);
-                // startActivity(intent);
+                 Intent intent = new Intent(LoginActivity.this, ForgotPasswordActivity.class);
+                 startActivity(intent);
             }
         });
 

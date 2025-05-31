@@ -1,27 +1,45 @@
 package com.example.currents.activity;
 
+import android.content.Intent;
 import android.os.Bundle;
-import android.view.View; // Import View
+import android.view.View;
 import android.widget.TextView;
 import android.widget.Toast;
+
 import androidx.appcompat.app.AppCompatActivity;
-import androidx.appcompat.widget.SearchView; // Import SearchView
+import androidx.appcompat.widget.SearchView;
 import androidx.recyclerview.widget.LinearLayoutManager;
 import androidx.recyclerview.widget.RecyclerView;
+
 import com.example.currents.R;
-import com.google.android.material.appbar.MaterialToolbar; // Import MaterialToolbar
+import com.example.currents.adapter.NewsAdapter;
+import com.example.currents.model.NewsItem;
+import com.google.android.material.appbar.MaterialToolbar;
 import com.google.android.material.search.SearchBar;
 import com.google.android.material.bottomnavigation.BottomNavigationView;
 
-public class HomeActivity extends AppCompatActivity {
+import java.util.ArrayList;
+import java.util.List;
+import java.util.stream.Collectors; // For filtering (ensure Java 8 compatibility)
+
+public class HomeActivity extends AppCompatActivity implements NewsAdapter.OnNewsClickListener {
 
     private RecyclerView horizontalCardRecyclerView;
     private RecyclerView verticalCardRecyclerView;
     private SearchBar searchBar;
     private BottomNavigationView bottomNavigationView;
-    private TextView selectedNameTextView;
-    private MaterialToolbar searchToolbar; // Declare MaterialToolbar
-    private SearchView appCompatSearchView; // Declare SearchView
+    private MaterialToolbar searchToolbar;
+    private SearchView appCompatSearchView;
+
+    private NewsAdapter verticalNewsAdapter; // Adapter for the vertical RecyclerView
+    private List<NewsItem> allNewsItems; // Master list of all news
+
+    // Keys for passing data to ReadNewsActivity (should be consistent with SavedNewsActivity)
+    public static final String EXTRA_NEWS_TITLE = "extra_news_title";
+    public static final String EXTRA_NEWS_DATE = "extra_news_date";
+    public static final String EXTRA_NEWS_IMAGE_RES_ID = "extra_news_image_res_id";
+    public static final String EXTRA_NEWS_CONTENT = "extra_news_content";
+
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -32,7 +50,7 @@ public class HomeActivity extends AppCompatActivity {
         horizontalCardRecyclerView = findViewById(R.id.horizontalCardRecyclerView);
         verticalCardRecyclerView = findViewById(R.id.verticalCardRecyclerView);
 
-        // Initialize SearchBar, BottomNavigationView, TextView
+        // Initialize SearchBar, BottomNavigationView
         searchBar = findViewById(R.id.searchBar);
         bottomNavigationView = findViewById(R.id.bottomNavigationView);
 
@@ -42,15 +60,44 @@ public class HomeActivity extends AppCompatActivity {
 
         // Set up LinearLayoutManager for horizontal RecyclerView
         horizontalCardRecyclerView.setLayoutManager(new LinearLayoutManager(this, LinearLayoutManager.HORIZONTAL, false));
-        // You'll need to set an adapter for horizontalCardRecyclerView here later
+        // TODO: You'll need to set an adapter for horizontalCardRecyclerView here later,
+        //  e.g., for "trending news" or "featured categories".
 
         // Set up LinearLayoutManager for vertical RecyclerView
         verticalCardRecyclerView.setLayoutManager(new LinearLayoutManager(this, LinearLayoutManager.VERTICAL, false));
-        // You'll need to set an adapter for verticalCardRecyclerView here later
+
+        // --- Sample News Data ---
+        allNewsItems = new ArrayList<>();
+        // Add sample news items for Sports
+        allNewsItems.add(new NewsItem("Champions League Final Recap", "2024-05-28", R.drawable.news_placeholder, "Sports", getString(R.string.lorem_ipsum)));
+        allNewsItems.add(new NewsItem("NBA Playoffs: Game 7 Thriller", "2024-05-27", R.drawable.news_placeholder, "Sports", getString(R.string.lorem_ipsum)));
+        allNewsItems.add(new NewsItem("Local Marathon Results", "2024-05-26", R.drawable.news_placeholder, "Sports", getString(R.string.lorem_ipsum)));
+        allNewsItems.add(new NewsItem("Cricket World Cup Preparations", "2024-05-25", R.drawable.news_placeholder, "Sports", getString(R.string.lorem_ipsum)));
+
+        // Add sample news items for Academic
+        allNewsItems.add(new NewsItem("New AI Research Published", "2024-05-29", R.drawable.news_placeholder, "Academic", getString(R.string.lorem_ipsum)));
+        allNewsItems.add(new NewsItem("University Hosts Tech Symposium", "2024-05-28", R.drawable.news_placeholder, "Academic", getString(R.string.lorem_ipsum)));
+        allNewsItems.add(new NewsItem("Scholarship Opportunities for Students", "2024-05-27", R.drawable.news_placeholder, "Academic", getString(R.string.lorem_ipsum)));
+        allNewsItems.add(new NewsItem("Breakthrough in Medical Science", "2024-05-26", R.drawable.news_placeholder, "Academic", getString(R.string.lorem_ipsum)));
+
+        // Add sample news items for Events
+        allNewsItems.add(new NewsItem("Summer Music Festival Announced", "2024-05-30", R.drawable.news_placeholder, "Events", getString(R.string.lorem_ipsum)));
+        allNewsItems.add(new NewsItem("Community Art Fair This Weekend", "2024-05-29", R.drawable.news_placeholder, "Events", getString(R.string.lorem_ipsum)));
+        allNewsItems.add(new NewsItem("Annual Food Festival Dates", "2024-05-28", R.drawable.news_placeholder, "Events", getString(R.string.lorem_ipsum)));
+        allNewsItems.add(new NewsItem("Local Charity Run Success", "2024-05-27", R.drawable.news_placeholder, "Events", getString(R.string.lorem_ipsum)));
+
+
+        // Initialize vertical RecyclerView adapter
+        // Pass 'this' as the OnNewsClickListener for handling item clicks
+        verticalNewsAdapter = new NewsAdapter(new ArrayList<>(), this);
+        verticalCardRecyclerView.setAdapter(verticalNewsAdapter);
+
+
+
 
         // --- SearchBar and SearchView Logic ---
 
-        // Make SearchBar click listener to reveal SearchView
+        // Make SearchBar clickable to reveal SearchView
         searchBar.setOnClickListener(v -> {
             searchBar.setVisibility(View.GONE); // Hide the SearchBar
             searchToolbar.setVisibility(View.VISIBLE); // Show the search Toolbar
@@ -65,6 +112,8 @@ public class HomeActivity extends AppCompatActivity {
             searchBar.setVisibility(View.VISIBLE);
             appCompatSearchView.setQuery("", false); // Clear query
             appCompatSearchView.clearFocus(); // Remove focus
+            // After closing search, ensure the correct category list is shown
+            filterNewsByCategory(getSelectedCategoryFromBottomNav());
             // You might want to hide keyboard here too
             // InputMethodManager imm = (InputMethodManager) getSystemService(Context.INPUT_METHOD_SERVICE);
             // imm.hideSoftInputFromWindow(appCompatSearchView.getWindowToken(), 0);
@@ -75,39 +124,48 @@ public class HomeActivity extends AppCompatActivity {
             @Override
             public boolean onQueryTextSubmit(String query) {
                 Toast.makeText(HomeActivity.this, "Searching for: " + query, Toast.LENGTH_SHORT).show();
-                // Perform your search operation here
-                // After search, you might want to hide the keyboard and possibly the search view
-                // appCompatSearchView.clearFocus();
+                // Perform your search operation here, filtering the current category's news
+                filterNewsByQuery(query);
+                appCompatSearchView.clearFocus(); // Hide keyboard after search
                 return true;
             }
 
             @Override
             public boolean onQueryTextChange(String newText) {
-                // Filter your data as the user types
-                // Log.d("SearchView", "Query text changed: " + newText);
-                return false;
+                // Optional: Filter your data as the user types (live search)
+                // Be cautious with performance on very large datasets for live filtering
+                // For this example, we'll only filter on submit, but you could enable live search here
+                // if (!newText.isEmpty() || !appCompatSearchView.getQuery().toString().isEmpty()) { // Only filter if query is not empty
+                //     filterNewsByQuery(newText);
+                // } else {
+                //     filterNewsByCategory(getSelectedCategoryFromBottomNav()); // Show current category if query becomes empty
+                // }
+                return false; // Return true if you handled the change, false otherwise
             }
         });
 
-        // Optional: Listen for close button on SearchView
+        // Optional: Listen for close button on SearchView (the 'x' icon)
         appCompatSearchView.setOnCloseListener(() -> {
-            // This is triggered when the 'x' icon is pressed if iconifiedByDefault is true
-            // Since we set iconifiedByDefault to false, this might not be strictly needed for basic close
-            // But good to have if you later decide to allow collapsing
-            return false;
+            // This is triggered when the 'x' icon is pressed
+            appCompatSearchView.setQuery("", false); // Clear query
+            appCompatSearchView.clearFocus(); // Remove focus
+            // After closing search, ensure the correct category list is shown
+            filterNewsByCategory(getSelectedCategoryFromBottomNav());
+            return false; // Return true if you consumed the event, false otherwise
         });
 
-        // --- Existing SearchBar Menu Item Clicks ---
+        // --- SearchBar Menu Item Clicks (top right menu on SearchBar) ---
         searchBar.setOnMenuItemClickListener(item -> {
             int itemId = item.getItemId();
-            if (itemId == R.id.read_news) {
-                Toast.makeText(HomeActivity.this, "Read News Temp", Toast.LENGTH_SHORT).show();
-                return true;
-            } else if (itemId == R.id.developer_info) {
-                Toast.makeText(HomeActivity.this, "Developer Info", Toast.LENGTH_SHORT).show();
+            if (itemId == R.id.developer_info) {
+                // Navigate to DeveloperInfoActivity
+                Intent intent = new Intent(HomeActivity.this, AboutActivity.class); // Assuming AboutActivity is your developer info screen
+                startActivity(intent);
                 return true;
             } else if (itemId == R.id.profile) {
-                Toast.makeText(HomeActivity.this, "View Profile", Toast.LENGTH_SHORT).show();
+                // Navigate to ProfileActivity
+                Intent intent = new Intent(HomeActivity.this, ProfileActivity.class);
+                startActivity(intent);
                 return true;
             }
             return false;
@@ -117,21 +175,95 @@ public class HomeActivity extends AppCompatActivity {
         // --- BottomNavigationView Logic ---
         bottomNavigationView.setOnItemSelectedListener(item -> {
             int itemId = item.getItemId();
+            String category = "";
             if (itemId == R.id.navigation_sports) {
-                searchBar.setHint(getString(R.string.sports));
-                return true;
+                category = getString(R.string.sports);
             } else if (itemId == R.id.navigation_academic) {
-                searchBar.setHint(getString(R.string.academic));
-                return true;
+                category = getString(R.string.academic);
             } else if (itemId == R.id.navigation_events) {
-                searchBar.setHint(getString(R.string.events));
-                return true;
+                category = getString(R.string.events);
             }
-            return false;
+            searchBar.setHint(category); // Update search bar hint
+            filterNewsByCategory(category); // Filter vertical news based on category
+            return true; // Indicate that the item selection was handled
         });
 
-        // Set initial SearchBar hint and TextView text
-        searchBar.setHint(getString(R.string.sports));
+        // Set initial state: select Sports in bottom navigation and filter news accordingly
+        bottomNavigationView.setSelectedItemId(R.id.navigation_sports);
+        searchBar.setHint(getString(R.string.sports)); // Set initial hint
+        filterNewsByCategory(getString(R.string.sports)); // Initial filter to show Sports news
+    }
+
+    // --- NewsAdapter.OnNewsClickListener Implementation ---
+    // This method is called when a news item in the vertical RecyclerView is clicked
+    @Override
+    public void onNewsClick(NewsItem newsItem) {
+        // Start ReadNewsActivity and pass all necessary news data
+        Intent intent = new Intent(HomeActivity.this, ReadNewsActivity.class);
+        intent.putExtra(EXTRA_NEWS_TITLE, newsItem.getTitle());
+        intent.putExtra(EXTRA_NEWS_DATE, newsItem.getPostedDate());
+        intent.putExtra(EXTRA_NEWS_IMAGE_RES_ID, newsItem.getImageResId());
+        intent.putExtra(EXTRA_NEWS_CONTENT, newsItem.getContent()); // Pass the full content
+        startActivity(intent);
+    }
+
+    // --- Helper method to filter news by category ---
+    private void filterNewsByCategory(String category) {
+        List<NewsItem> filteredList;
+        if (category == null || category.isEmpty()) {
+            // If category is null or empty, show all news from the master list
+            filteredList = new ArrayList<>(allNewsItems);
+        } else {
+            // Filter the master list based on the category (case-insensitive)
+            filteredList = allNewsItems.stream()
+                    .filter(news -> news.getCategory().equalsIgnoreCase(category))
+                    .collect(Collectors.toList());
+        }
+        // Update the adapter with the filtered list, which will refresh the RecyclerView
+        verticalNewsAdapter.setNewsList(filteredList);
+    }
+
+    // --- Helper method to filter news by search query within the current category ---
+    private void filterNewsByQuery(String query) {
+        if (query == null || query.trim().isEmpty()) {
+            // If query is empty, revert to showing news for the currently selected category
+            filterNewsByCategory(getSelectedCategoryFromBottomNav());
+            return;
+        }
+
+        // Get the news items for the currently selected category first
+        String currentCategory = getSelectedCategoryFromBottomNav();
+        List<NewsItem> currentCategoryNews;
+
+        if (currentCategory.isEmpty()) {
+            // Should not happen if bottom nav is always selected, but as a fallback
+            currentCategoryNews = allNewsItems;
+        } else {
+            currentCategoryNews = allNewsItems.stream()
+                    .filter(news -> news.getCategory().equalsIgnoreCase(currentCategory))
+                    .collect(Collectors.toList());
+        }
+
+        // Now, filter these category-specific news items by the search query
+        List<NewsItem> filteredByQuery = currentCategoryNews.stream()
+                .filter(news -> news.getTitle().toLowerCase().contains(query.toLowerCase()) ||
+                        news.getContent().toLowerCase().contains(query.toLowerCase())) // Search in title and content
+                .collect(Collectors.toList());
+
+        verticalNewsAdapter.setNewsList(filteredByQuery);
+    }
+
+    // Helper method to determine the currently selected category from the bottom navigation
+    private String getSelectedCategoryFromBottomNav() {
+        int selectedId = bottomNavigationView.getSelectedItemId();
+        if (selectedId == R.id.navigation_sports) {
+            return getString(R.string.sports);
+        } else if (selectedId == R.id.navigation_academic) {
+            return getString(R.string.academic);
+        } else if (selectedId == R.id.navigation_events) {
+            return getString(R.string.events);
+        }
+        return getString(R.string.sports); // Default to sports if no item is selected (should be avoided)
     }
 
     @Override
@@ -140,13 +272,16 @@ public class HomeActivity extends AppCompatActivity {
         if (searchToolbar.getVisibility() == View.VISIBLE) {
             searchToolbar.setVisibility(View.GONE);
             searchBar.setVisibility(View.VISIBLE);
-            appCompatSearchView.setQuery("", false);
-            appCompatSearchView.clearFocus();
+            appCompatSearchView.setQuery("", false); // Clear any text in SearchView
+            appCompatSearchView.clearFocus(); // Remove focus from SearchView
+            // After hiding search, ensure the correct category list is shown
+            filterNewsByCategory(getSelectedCategoryFromBottomNav());
             // Optionally hide keyboard
             // InputMethodManager imm = (InputMethodManager) getSystemService(Context.INPUT_METHOD_SERVICE);
             // imm.hideSoftInputFromWindow(appCompatSearchView.getWindowToken(), 0);
         } else {
-            super.onBackPressed(); // Let the system handle back press
+            // If search toolbar is not visible, proceed with default back press behavior
+            super.onBackPressed();
         }
     }
 }
