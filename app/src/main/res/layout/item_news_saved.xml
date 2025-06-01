@@ -26,8 +26,7 @@
             app:layout_constraintTop_toTopOf="parent"
             app:layout_constraintEnd_toStartOf="@id/newsImage"
             android:layout_marginEnd="16dp"
-            tools:text="Title"
-            />
+            tools:text="@string/news_title" />
 
         <TextView
             android:id="@+id/newsPostedDate"
@@ -40,8 +39,7 @@
             app:layout_constraintTop_toBottomOf="@id/newsTitle"
             app:layout_constraintEnd_toStartOf="@id/newsImage"
             android:layout_marginEnd="16dp"
-            tools:text="Posted Date"
-            />
+            tools:text="@string/posted_date" />
 
         <ImageView
             android:id="@+id/newsImage"
@@ -52,8 +50,7 @@
             app:layout_constraintEnd_toEndOf="parent"
             app:layout_constraintTop_toTopOf="parent"
             app:layout_constraintBottom_toBottomOf="parent"
-            android:contentDescription="News Image"
-            tools:src="@tools:sample/backgrounds/squares"/>
+            android:contentDescription="@string/news_image_placeholder" />
 
     </androidx.constraintlayout.widget.ConstraintLayout>
 </androidx.cardview.widget.CardView>

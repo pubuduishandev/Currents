@@ -6,27 +6,23 @@
     android:layout_height="wrap_content"
     android:orientation="vertical"
     android:padding="24dp"
-    android:background="@drawable/bottom_sheet_background"> <View
-    android:layout_width="40dp"
-    android:layout_height="4dp"
-    android:background="@color/text_secondary"
-    android:layout_gravity="center_horizontal"
-    android:layout_marginBottom="16dp"/>
+    android:background="@drawable/bottom_sheet_background">
 
     <TextView
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
-        android:text="Share your feedback"
+        android:text="@string/feedback_title"
         android:textColor="@color/text_primary"
         android:textSize="22sp"
         android:textStyle="bold"
         android:layout_gravity="center_horizontal"
+        android:layout_marginTop="16dp"
         android:layout_marginBottom="8dp"/>
 
     <TextView
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
-        android:text="What is your opinion of Currents?"
+        android:text="@string/feedback_instructions"
         android:textColor="@color/text_secondary"
         android:textSize="16sp"
         android:layout_gravity="center_horizontal"
@@ -43,7 +39,8 @@
             android:id="@+id/star1"
             android:layout_width="40dp"
             android:layout_height="40dp"
-            android:src="@drawable/star_outline" android:padding="4dp"
+            android:src="@drawable/star_outline"
+            android:padding="4dp"
             app:tint="@color/primary_color" />
         <ImageView
             android:id="@+id/star2"
@@ -80,7 +77,7 @@
         android:layout_width="match_parent"
         android:layout_height="120dp"
         android:background="@drawable/edit_text_background"
-        android:hint="Place your feedback here"
+        android:hint="@string/feedback_placeholder"
         android:gravity="top"
         android:padding="12dp"
         android:textColor="@color/text_primary"
@@ -93,7 +90,7 @@
         android:id="@+id/sendFeedbackButton"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:text="Send your feedback"
+        android:text="@string/feedback_submit_button"
         android:backgroundTint="@color/primary_color"
         android:textColor="@color/background_color"
         android:textSize="16sp"

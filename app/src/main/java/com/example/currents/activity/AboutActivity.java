@@ -8,8 +8,6 @@ import android.view.Menu;
 import android.view.MenuInflater;
 import android.view.MenuItem;
 import android.view.View;
-import android.widget.ImageView; // Import ImageView if not already
-import android.widget.TextView; // Import TextView if not already
 import android.widget.Toast;
 
 import androidx.appcompat.app.AppCompatActivity;
@@ -43,56 +41,53 @@ public class AboutActivity extends AppCompatActivity {
         gitHubCard = findViewById(R.id.gitHubCard); // Use the correct ID from XML
         linkedInCard = findViewById(R.id.linkedInCard); // Use the correct ID from XML
 
-
-        // Set click listeners for interactive cards
         emailCard.setOnClickListener(new View.OnClickListener() {
             @Override
-            public void onClick(View v) {
-                TextView emailValue = findViewById(R.id.emailValue); // Get the TextView
-                String email = emailValue.getText().toString(); // Get email from the TextView
-                Intent intent = new Intent(Intent.ACTION_SENDTO);
-                intent.setData(Uri.parse("mailto:")); // only email apps should handle this
-                intent.putExtra(Intent.EXTRA_EMAIL, new String[]{email});
-                intent.putExtra(Intent.EXTRA_SUBJECT, "Inquiry from Currents App");
-                if (intent.resolveActivity(getPackageManager()) != null) {
-                    startActivity(intent);
-                } else {
-                    Toast.makeText(AboutActivity.this, "No email app found.", Toast.LENGTH_SHORT).show();
-                }
+            public void onClick(View view) {
+                sendEmail("mailto:2020t00876@stu.cmb.ac.lk");
             }
         });
 
         gitHubCard.setOnClickListener(new View.OnClickListener() {
             @Override
-            public void onClick(View v) {
-                TextView githubValue = findViewById(R.id.gitHubValue);
-                String username = githubValue.getText().toString();
-                String url = "https://github.com/" + username;
-                Intent intent = new Intent(Intent.ACTION_VIEW);
-                intent.setData(Uri.parse(url));
-                if (intent.resolveActivity(getPackageManager()) != null) {
-                    startActivity(intent);
-                } else {
-                    Toast.makeText(AboutActivity.this, "No browser found.", Toast.LENGTH_SHORT).show();
-                }
+            public void onClick(View view) {
+                visitGitHub("https://github.com/pubuduishandev");
             }
         });
 
         linkedInCard.setOnClickListener(new View.OnClickListener() {
             @Override
-            public void onClick(View v) {
-                TextView linkedinValue = findViewById(R.id.linkedInValue);
-                String profile = linkedinValue.getText().toString();
-                String url = "https://www.linkedin.com/in/" + profile;
-                Intent intent = new Intent(Intent.ACTION_VIEW);
-                intent.setData(Uri.parse(url));
-                if (intent.resolveActivity(getPackageManager()) != null) {
-                    startActivity(intent);
-                } else {
-                    Toast.makeText(AboutActivity.this, "No browser found.", Toast.LENGTH_SHORT).show();
-                }
+            public void onClick(View view) {
+                visitLinkedIn("https://www.linkedin.com/in/pubuduishan/");
             }
         });
+    }
+
+    void sendEmail(String s) {
+        try{
+            Uri uri = Uri.parse(s);
+            startActivity(new Intent(Intent.ACTION_VIEW, uri));
+        } catch (Exception e) {
+            Toast.makeText(getApplicationContext(), "Email not found", Toast.LENGTH_SHORT).show();
+        }
+    }
+
+    void visitGitHub(String s) {
+        try{
+            Uri uri = Uri.parse(s);
+            startActivity(new Intent(Intent.ACTION_VIEW, uri));
+        } catch (Exception e) {
+            Toast.makeText(getApplicationContext(), "GitHub not found", Toast.LENGTH_SHORT).show();
+        }
+    }
+
+    void visitLinkedIn(String s) {
+        try{
+            Uri uri = Uri.parse(s);
+            startActivity(new Intent(Intent.ACTION_VIEW, uri));
+        } catch (Exception e) {
+            Toast.makeText(getApplicationContext(), "LinkedIn not found", Toast.LENGTH_SHORT).show();
+        }
     }
 
     @Override
@@ -106,10 +101,7 @@ public class AboutActivity extends AppCompatActivity {
     public boolean onOptionsItemSelected(MenuItem item) {
         int id = item.getItemId();
 
-        if (id == android.R.id.home) {
-            onBackPressed();
-            return true;
-        } else if (id == R.id.action_favorite) {
+        if (id == R.id.action_favorite) {
             // Show the FeedbackBottomSheet when favorite icon is clicked
             FeedbackBottomSheet feedbackBottomSheet = FeedbackBottomSheet.newInstance();
             feedbackBottomSheet.show(getSupportFragmentManager(), feedbackBottomSheet.getTag());
@@ -117,5 +109,11 @@ public class AboutActivity extends AppCompatActivity {
         }
 
         return super.onOptionsItemSelected(item);
+    }
+
+    @Override
+    public boolean onSupportNavigateUp() {
+        onBackPressed();
+        return true;
     }
 }

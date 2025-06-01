@@ -58,19 +58,19 @@ public class SavedNewsActivity extends AppCompatActivity implements NewsAdapter.
         // Initialize all news items (sample data)
         allNewsItems = new ArrayList<>();
         // Add sample news items for Sports
-        allNewsItems.add(new NewsItem("Local Football Match Result", "2024-05-30", R.drawable.news_placeholder, "Sports", getString(R.string.lorem_ipsum)));
-        allNewsItems.add(new NewsItem("Basketball Tournament Highlights", "2024-05-29", R.drawable.news_placeholder, "Sports", getString(R.string.lorem_ipsum)));
-        allNewsItems.add(new NewsItem("Athlete Prepares for Olympics", "2024-05-28", R.drawable.news_placeholder, "Sports", getString(R.string.lorem_ipsum)));
+        allNewsItems.add(new NewsItem("Local Football Match Result", "2024-05-30", R.drawable.news_placeholder, "Sports", getString(R.string.sample_news_content)));
+        allNewsItems.add(new NewsItem("Basketball Tournament Highlights", "2024-05-29", R.drawable.news_placeholder, "Sports", getString(R.string.sample_news_content)));
+        allNewsItems.add(new NewsItem("Athlete Prepares for Olympics", "2024-05-28", R.drawable.news_placeholder, "Sports", getString(R.string.sample_news_content)));
 
         // Add sample news items for Academic
-        allNewsItems.add(new NewsItem("University Research Breakthrough", "2024-05-27", R.drawable.news_placeholder, "Academic", getString(R.string.lorem_ipsum)));
-        allNewsItems.add(new NewsItem("New Course Offerings Announced", "2024-05-26", R.drawable.news_placeholder, "Academic", getString(R.string.lorem_ipsum)));
-        allNewsItems.add(new NewsItem("Student Wins National Essay Contest", "2024-05-25", R.drawable.news_placeholder, "Academic", getString(R.string.lorem_ipsum)));
+        allNewsItems.add(new NewsItem("University Research Breakthrough", "2024-05-27", R.drawable.news_placeholder, "Academic", getString(R.string.sample_news_content)));
+        allNewsItems.add(new NewsItem("New Course Offerings Announced", "2024-05-26", R.drawable.news_placeholder, "Academic", getString(R.string.sample_news_content)));
+        allNewsItems.add(new NewsItem("Student Wins National Essay Contest", "2024-05-25", R.drawable.news_placeholder, "Academic", getString(R.string.sample_news_content)));
 
         // Add sample news items for Events
-        allNewsItems.add(new NewsItem("Annual Tech Summit Dates", "2024-05-24", R.drawable.news_placeholder, "Events", getString(R.string.lorem_ipsum)));
-        allNewsItems.add(new NewsItem("Music Festival Lineup Revealed", "2024-05-23", R.drawable.news_placeholder, "Events", getString(R.string.lorem_ipsum)));
-        allNewsItems.add(new NewsItem("Community Fair This Weekend", "2024-05-22", R.drawable.news_placeholder, "Events", getString(R.string.lorem_ipsum)));
+        allNewsItems.add(new NewsItem("Annual Tech Summit Dates", "2024-05-24", R.drawable.news_placeholder, "Events", getString(R.string.sample_news_content)));
+        allNewsItems.add(new NewsItem("Music Festival Lineup Revealed", "2024-05-23", R.drawable.news_placeholder, "Events", getString(R.string.sample_news_content)));
+        allNewsItems.add(new NewsItem("Community Fair This Weekend", "2024-05-22", R.drawable.news_placeholder, "Events", getString(R.string.sample_news_content)));
 
         // Initialize adapter with an empty list and pass 'this' as the listener
         newsAdapter = new NewsAdapter(new ArrayList<>(), this);

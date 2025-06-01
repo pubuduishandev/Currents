@@ -1,9 +1,11 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
     <color name="primary_color">#103860</color>
+    <color name="background_color">#FFFFFF</color>
+    <color name="app_bar_color">#FFFFFF</color>
+    <color name="tab_color">#F2F2F2</color>
     <color name="secondary_color">#000000</color>
     <color name="button_text_color">#FFFFFF</color>
-    <color name="background_color">#FFFFFF</color>
     <color name="text_primary">#000000</color>
     <color name="text_secondary">#757575</color>
     <color name="error_color">#F44336</color>
@@ -11,11 +13,8 @@
     <color name="warning_color">#FF9800</color>
     <color name="info_color">#2196F3</color>
     <color name="card_background">#fef7ff</color>
-
-    <color name="button_background_primary">#2196F3</color>
-    <color name="button_text_primary">#FFFFFF</color>
-    <color name="button_google_background">#FFFFFF</color>
-    <color name="button_google_text">#757575</color>
     <color name="divider_color">#E0E0E0</color>
-    <color name="link_text_color">#2196F3</color>
+    <color name="placeholder_color">#BDBDBD</color>"
+    <color name="positive_button_color">@color/primary_color</color>
+    <color name="negative_button_color">#b3261e</color>
 </resources>

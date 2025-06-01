@@ -83,7 +83,7 @@
                         android:id="@+id/developedByLabel"
                         android:layout_width="wrap_content"
                         android:layout_height="wrap_content"
-                        android:text="Developed by"
+                        android:text="@string/developed_by"
                         android:textColor="@color/text_primary"
                         android:textSize="16sp"
                         android:textStyle="bold"
@@ -95,7 +95,7 @@
                         android:id="@+id/developedByValue"
                         android:layout_width="wrap_content"
                         android:layout_height="wrap_content"
-                        android:text="Pubudu Ishan Wickrama Arachchi"
+                        android:text="@string/developer_name"
                         android:textColor="@color/text_secondary"
                         android:textSize="14sp"
                         app:layout_constraintStart_toStartOf="@id/developedByLabel"
@@ -114,8 +114,7 @@
                 app:cardElevation="0dp"
                 app:cardBackgroundColor="@color/card_background"
                 app:contentPadding="16dp"
-                app:layout_constraintTop_toBottomOf="@id/developerName"
-                app:layout_constraintStart_toStartOf="parent"
+                app:layout_constraintTop_toBottomOf="@id/developerName"  app:layout_constraintStart_toStartOf="parent"
                 app:layout_constraintEnd_toEndOf="parent">
 
                 <androidx.constraintlayout.widget.ConstraintLayout
@@ -138,7 +137,7 @@
                         android:id="@+id/studentRegNoLabel"
                         android:layout_width="wrap_content"
                         android:layout_height="wrap_content"
-                        android:text="Student Reg.No"
+                        android:text="@string/developer_student_id_label"
                         android:textColor="@color/text_primary"
                         android:textSize="16sp"
                         android:textStyle="bold"
@@ -150,7 +149,7 @@
                         android:id="@+id/studentRegNoValue"
                         android:layout_width="wrap_content"
                         android:layout_height="wrap_content"
-                        android:text="2020t00876"
+                        android:text="@string/developer_student_id"
                         android:textColor="@color/text_secondary"
                         android:textSize="14sp"
                         app:layout_constraintStart_toStartOf="@id/studentRegNoLabel"
@@ -169,8 +168,7 @@
                 app:cardElevation="0dp"
                 app:cardBackgroundColor="@color/card_background"
                 app:contentPadding="16dp"
-                app:layout_constraintTop_toBottomOf="@id/studentRegNo"
-                app:layout_constraintStart_toStartOf="parent"
+                app:layout_constraintTop_toBottomOf="@id/studentRegNo" app:layout_constraintStart_toStartOf="parent"
                 app:layout_constraintEnd_toEndOf="parent">
 
                 <androidx.constraintlayout.widget.ConstraintLayout
@@ -193,7 +191,7 @@
                         android:id="@+id/emailLabel"
                         android:layout_width="wrap_content"
                         android:layout_height="wrap_content"
-                        android:text="Email"
+                        android:text="@string/email_hint"
                         android:textColor="@color/text_primary"
                         android:textSize="16sp"
                         android:textStyle="bold"
@@ -205,11 +203,21 @@
                         android:id="@+id/emailValue"
                         android:layout_width="wrap_content"
                         android:layout_height="wrap_content"
-                        android:text="2020t00876@stu.cmb.ac.lk"
+                        android:text="@string/developer_email"
                         android:textColor="@color/text_secondary"
                         android:textSize="14sp"
                         app:layout_constraintStart_toStartOf="@id/emailLabel"
                         app:layout_constraintTop_toBottomOf="@id/emailLabel"/>
+
+                    <ImageView
+                        android:id="@+id/emailArrow"
+                        android:layout_width="24dp"
+                        android:layout_height="24dp"
+                        android:src="@drawable/chevron_right"
+                        app:tint="@color/text_secondary"
+                        app:layout_constraintEnd_toEndOf="parent"
+                        app:layout_constraintTop_toTopOf="parent"
+                        app:layout_constraintBottom_toBottomOf="parent"/>
                 </androidx.constraintlayout.widget.ConstraintLayout>
             </androidx.cardview.widget.CardView>
 
@@ -224,8 +232,7 @@
                 app:cardElevation="0dp"
                 app:cardBackgroundColor="@color/card_background"
                 app:contentPadding="16dp"
-                app:layout_constraintTop_toBottomOf="@id/emailCard"
-                app:layout_constraintStart_toStartOf="parent"
+                app:layout_constraintTop_toBottomOf="@id/emailCard" app:layout_constraintStart_toStartOf="parent"
                 app:layout_constraintEnd_toEndOf="parent">
 
                 <androidx.constraintlayout.widget.ConstraintLayout
@@ -248,7 +255,7 @@
                         android:id="@+id/gitHubLabel"
                         android:layout_width="wrap_content"
                         android:layout_height="wrap_content"
-                        android:text="GitHub Profile"
+                        android:text="@string/developer_github_label"
                         android:textColor="@color/text_primary"
                         android:textSize="16sp"
                         android:textStyle="bold"
@@ -260,7 +267,7 @@
                         android:id="@+id/gitHubValue"
                         android:layout_width="wrap_content"
                         android:layout_height="wrap_content"
-                        android:text="pubuduishandev"
+                        android:text="@string/developer_github"
                         android:textColor="@color/text_secondary"
                         android:textSize="14sp"
                         app:layout_constraintStart_toStartOf="@id/gitHubLabel"
@@ -289,8 +296,7 @@
                 app:cardElevation="0dp"
                 app:cardBackgroundColor="@color/card_background"
                 app:contentPadding="16dp"
-                app:layout_constraintTop_toBottomOf="@id/gitHubCard"
-                app:layout_constraintStart_toStartOf="parent"
+                app:layout_constraintTop_toBottomOf="@id/gitHubCard" app:layout_constraintStart_toStartOf="parent"
                 app:layout_constraintEnd_toEndOf="parent">
 
                 <androidx.constraintlayout.widget.ConstraintLayout
@@ -313,7 +319,7 @@
                         android:id="@+id/linkedInLabel"
                         android:layout_width="wrap_content"
                         android:layout_height="wrap_content"
-                        android:text="LinkedIn Profile"
+                        android:text="@string/developer_linkedin_label"
                         android:textColor="@color/text_primary"
                         android:textSize="16sp"
                         android:textStyle="bold"
@@ -325,7 +331,7 @@
                         android:id="@+id/linkedInValue"
                         android:layout_width="wrap_content"
                         android:layout_height="wrap_content"
-                        android:text="pubuduishandigital"
+                        android:text="@string/developer_linkedin"
                         android:textColor="@color/text_secondary"
                         android:textSize="14sp"
                         app:layout_constraintStart_toStartOf="@id/linkedInLabel"
@@ -348,19 +354,19 @@
                 android:layout_width="180dp"
                 android:layout_height="180dp"
                 android:src="@drawable/app_logo"
-                android:layout_marginTop="30dp"
-                app:layout_constraintTop_toBottomOf="@id/linkedInCard"
-                app:layout_constraintStart_toStartOf="parent"
+                android:layout_marginTop="-10dp"
+                app:layout_constraintTop_toBottomOf="@id/linkedInCard" app:layout_constraintStart_toStartOf="parent"
                 app:layout_constraintEnd_toEndOf="parent"
-                android:contentDescription="App Logo" />
+                android:contentDescription="@string/app_name" />
 
             <TextView
                 android:id="@+id/appVersion"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
-                android:text="V.1.0.0.1"
+                android:text="@string/app_version"
                 android:textColor="@color/primary_color"
                 android:textSize="14sp"
+                android:textStyle="bold"
                 app:layout_constraintTop_toBottomOf="@id/appLogo"
                 app:layout_constraintStart_toStartOf="parent"
                 app:layout_constraintEnd_toEndOf="parent"

@@ -3,11 +3,11 @@
     xmlns:app="http://schemas.android.com/apk/res-auto">
     <item android:id="@+id/developer_info"
         android:icon="@drawable/developer"
-        android:title="@string/search_hint"
-        app:showAsAction="always"/>
+        android:title="@string/developer_info"
+        app:showAsAction="ifRoom" />
 
     <item android:id="@+id/profile"
         android:icon="@drawable/profile"
         android:title="@string/profile_button"
-        app:showAsAction="always"/>
+        app:showAsAction="ifRoom" />
 </menu>

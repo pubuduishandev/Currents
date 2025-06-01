@@ -1,109 +1,73 @@
 <resources>
-    //Splash Screen
     <string name="app_name">Currents</string>
+    <string name="developer_concept">Concept &amp; Developed by</string>
+    <string name="developer_dept">Department of ICT</string>
+    <string name="developer_faculty">Faculty of Technology, University of Colombo</string>
+    <string name="app_version">V.1.0.0.1</string>
+    <string name="splash_uni_logo">University Logo</string>
     <string name="splash_tagline">The official news broadcaster of faculty of technology</string>
-    <string name="splash_developer_concept">Concept &amp; Developed by</string>
-    <string name="splash_developer_dept">Department of ICT</string>
-    <string name="splash_developer_faculty">Faculty of Technology, University of Colombo</string>
-    <string name="app_version_name">V1.0.0.1</string>
-
-    //Login Screen
-    <string name="welcome_back">Login</string>
-    <string name="login_to_continue">Hello, welcome back</string>
+    <string name="login_welcome">Hello, welcome back</string>
     <string name="email_hint">Email</string>
     <string name="password_hint">Password</string>
     <string name="forgot_password">Forgot Password?</string>
-    <string name="login_button">Login</string>
-    <string name="or_text">OR</string>
+    <string name="login">Login</string>
     <string name="don_t_have_account">Don\'t have an account?</string>
-    <string name="sign_up_link">Sign Up</string>
-
-
-    //Signup Screen
-    <string name="signup_header">Sign Up</string>
+    <string name="sign_up">Sign Up</string>
+    <string name="login_success">Login Successful</string>
     <string name="signup_instructions">Just have to quick things to get started</string>
     <string name="first_name_hint">First Name</string>
     <string name="last_name_hint">Last Name</string>
     <string name="username_hint">Username</string>
-    <string name="email_hint_signup">Email</string>
-    <string name="password_hint_signup">Password</string>
     <string name="confirm_password_hint">Confirm Password</string>
-    <string name="sign_up_button">Sign Up</string>
     <string name="already_have_account">Already have an account?</string>
-    <string name="login_link">Login</string>
     <string name="signup_success">Sign Up Successful</string>
     <string name="signup_success_message">You have successfully signed up. Please log in to continue.</string>
-
-    //BottomNavigationBar
+    <string name="forgot_password_title">Forgot Password</string>
+    <string name="forgot_password_instructions">Please enter your email address to authenticate</string>
+    <string name="request_otp_button">Request OTP</string>
+    <string name="back_to_login">Back to Login</string>
+    <string name="otp_sent">OTP sent to your email</string>
+    <string name="otp_verification_title">Verification</string>
+    <string name="otp_verification_instructions">Please enter the 6-digits code we sent to your email 202********ac.lk</string>
+    <string name="otp_verify_button">Verify OTP</string>
+    <string name="otp_resend_ask">Don’t received code? </string>
+    <string name="otp_resend_button">Resend OTP</string>
+    <string name="otp_resend_success">OTP Resent Successfully</string>
+    <string name="otp_time">00:60</string>
+    <string name="otp_invalid">Invalid OTP</string>
+    <string name="otp_verified">OTP Verified</string>
+    <string name="back">Back</string>
+    <string name="reset_password">Reset Password</string>
+    <string name="reset_password_instruction">Create strong password to secure your account</string>
+    <string name="reset_password_success">Password Reset Successful</string>
+    <string name="all">All</string>
     <string name="sports">Sports</string>
     <string name="academic">Academic</string>
     <string name="events">Events</string>
-
-    //Search Bar
     <string name="search_hint">Search</string>
     <string name="profile_button">Profile</string>
-
-
-    <style name="DeveloperInfoCard" parent="CardView.Light">
-        <item name="android:layout_width">match_parent</item>
-        <item name="android:layout_height">wrap_content</item>
-        <item name="cardCornerRadius">8dp</item>
-        <item name="cardElevation">0dp</item>
-        <item name="cardBackgroundColor">@color/card_background</item>
-        <item name="android:layout_marginStart">16dp</item>
-        <item name="android:layout_marginEnd">16dp</item>
-    </style>
-
-    <style name="DeveloperInfoCardContent">
-        <item name="android:layout_width">match_parent</item>
-        <item name="android:layout_height">wrap_content</item>
-        <item name="android:paddingTop">12dp</item>
-        <item name="android:paddingBottom">12dp</item>
-        <item name="android:paddingStart">16dp</item>
-        <item name="android:paddingEnd">16dp</item>
-    </style>
-
-    <style name="DeveloperInfoIcon">
-        <item name="android:layout_width">36dp</item>
-        <item name="android:layout_height">36dp</item>
-        <item name="android:background">@drawable/circle</item>
-        <item name="android:padding">8dp</item>
-    </style>
-
-
-    <string name="forgot_password_title">Forgot Password</string>
-    <string name="forgot_password_subtitle">Please enter your email address to authenticate</string>
-    <string name="request_otp_button">Request OTP</string>
-    <string name="back_to_login">Back to Login</string>
-    <string name="developer_info">Concept &amp; Developed by\nDepartment of ICT\nFaculty of Technology, University of Colombo</string>
-    <string name="version_info">V.1.0.0.1</string>
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-    <string name="action_settings">Settings</string>
-    <!-- Strings used for fragments for navigation -->
-    <string name="first_fragment_label">First Fragment</string>
-    <string name="second_fragment_label">Second Fragment</string>
-    <string name="next">Next</string>
-    <string name="previous">Previous</string>
-
-    <string name="lorem_ipsum">
+    <string name="developer_info">Developer Info</string>
+    <string name="developed_by">Developed by</string>
+    <string name="developer_name">Pubudu Ishan Wickrama Arachchi</string>
+    <string name="developer_student_id_label">Student Reg.No</string>
+    <string name="developer_student_id">2020t00876</string>
+    <string name="developer_email">2020t00876@stu.cmb.ac.lk</string>
+    <string name="developer_github_label">GitHub Profile</string>
+    <string name="developer_github">pubuduishandev</string>
+    <string name="developer_linkedin_label">LinkedIn Profile</string>
+    <string name="developer_linkedin">pubuduishandigital</string>
+    <string name="user_profile_avatar">PI</string>
+    <string name="user_name">Pubudu Ishan</string>
+    <string name="personal_info_header">PERSONAL INFORMATION</string>
+    <string name="full_name_label">Full Name</string>">
+    <string name="full_name">Pubudu Ishan</string>
+    <string name="email">2020t00876@stu.cmb.ac.lk</string>
+    <string name="username">pubuduishan</string>
+    <string name="privacy_and_security_header">PRIVACY AND SECURITY</string>
+    <string name="password_changed_time">Changed one month ago</string>
+    <string name="news_title">News Article Title</string>
+    <string name="news_image_placeholder">News Image</string>
+    <string name="sample_news_content">
         Lorem ipsum dolor sit amet, consectetur adipiscing elit. Nam in scelerisque sem. Mauris
         volutpat, dolor id interdum ullamcorper, risus dolor egestas lectus, sit amet mattis purus
         dui nec risus. Maecenas non sodales nisi, vel dictum dolor. Class aptent taciti sociosqu ad
@@ -139,4 +103,23 @@
         libero vel nunc consequat, quis tincidunt nisl eleifend. Cras bibendum enim a justo luctus
         vestibulum. Fusce dictum libero quis erat maximus, vitae volutpat diam dignissim.
     </string>
+    <string name="posted_date">Posted Date</string>
+    <string name="news_source">News Source</string>
+    <string name="change_password_title">Change Password</string>
+    <string name="old_password_hint">Old Password</string>
+    <string name="new_password_hint">New Password</string>
+    <string name="cancel_button">Cancel</string>
+    <string name="submit_button">OK</string>
+    <string name="edit_profile_title">Edit Profile</string>
+    <string name="feedback_title">Share your feedback</string>
+    <string name="feedback_instructions">What is your opinion of Currents?</string>
+    <string name="feedback_placeholder">Place your feedback here</string>
+    <string name="feedback_submit_button">Send your feedback</string>
+
+    <string name="menu_feedback">Feedback</string>
+    <string name="menu_edit">Edit Profile</string>
+    <string name="menu_bookmark">Bookmark</string>
+    <string name="menu_sign_out">Sign out</string>
+    <string name="menu_read_aloud">Read Aloud</string>
+    <string name="menu_clear_bookmarks">Clear all Bookmarks</string>
 </resources>

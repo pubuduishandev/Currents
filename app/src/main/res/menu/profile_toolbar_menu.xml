@@ -1,19 +1,19 @@
 <?xml version="1.0" encoding="utf-8"?>
 <menu xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:app="http://schemas.android.com/apk/res-auto"> <item
-    android:title="Edit"
+    android:title="@string/menu_edit"
     android:icon="@drawable/edit"
     android:id="@+id/action_edit"
     app:showAsAction="ifRoom" />
 
     <item
-        android:title="Bookmark"
+        android:title="@string/menu_bookmark"
         android:icon="@drawable/bookmark"
         android:id="@+id/action_bookmark"
         app:showAsAction="ifRoom" />
 
     <item
-        android:title="Sign out"
+        android:title="@string/menu_sign_out"
         android:icon="@drawable/more_vert"
         android:id="@+id/action_more"
         app:showAsAction="never" />

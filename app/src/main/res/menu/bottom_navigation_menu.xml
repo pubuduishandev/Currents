@@ -2,13 +2,16 @@
 <menu xmlns:android="http://schemas.android.com/apk/res/android">
     <item
         android:id="@+id/navigation_sports"
-        android:icon="@drawable/sports" android:title="@string/sports" />
+        android:icon="@drawable/sports"
+        android:title="@string/sports" />
 
     <item
         android:id="@+id/navigation_academic"
-        android:icon="@drawable/academic" android:title="@string/academic" />
+        android:icon="@drawable/academic"
+        android:title="@string/academic" />
 
     <item
         android:id="@+id/navigation_events"
-        android:icon="@drawable/events" android:title="@string/events" />
+        android:icon="@drawable/events"
+        android:title="@string/events" />
 </menu>
