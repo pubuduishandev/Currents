@@ -15,7 +15,7 @@
         android:layout_marginTop="16dp"
         android:layout_marginEnd="16dp"
         android:hint="@string/sports"
-        app:backgroundTint="#ECE5F6"
+        app:backgroundTint="@color/search_bar_background"
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintHorizontal_bias="0.0"
         app:layout_constraintStart_toStartOf="parent"
@@ -34,7 +34,7 @@
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintTop_toTopOf="parent"
         app:navigationIcon="@drawable/arrow_back"
-        app:titleTextColor="@android:color/white" >
+        app:titleTextColor="@color/search_bar_background" >
 
         <androidx.appcompat.widget.SearchView
             android:id="@+id/appCompatSearchView"

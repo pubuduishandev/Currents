@@ -17,4 +17,6 @@
     <color name="placeholder_color">#BDBDBD</color>"
     <color name="positive_button_color">@color/primary_color</color>
     <color name="negative_button_color">#b3261e</color>
+    <color name="search_bar_background">#ECE5F6</color>
+    <color name="bottom_nav_bar_background">#ECE5F6</color>
 </resources>
