@@ -1,6 +1,8 @@
 package com.example.currents.model;
 
-public class NewsItem {
+import java.io.Serializable;
+
+public class NewsItem implements Serializable {
     private String title;
     private String postedDate;
     private int imageResId; // Resource ID for the image (e.g., R.drawable.news_placeholder)

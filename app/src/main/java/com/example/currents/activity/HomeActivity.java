@@ -5,16 +5,16 @@ import android.os.Bundle;
 import android.view.View;
 import android.widget.Toast;
 
+import androidx.activity.result.ActivityResultLauncher;
+import androidx.activity.result.contract.ActivityResultContracts;
 import androidx.appcompat.app.AppCompatActivity;
-import androidx.appcompat.widget.SearchView;
 import androidx.recyclerview.widget.LinearLayoutManager;
 import androidx.recyclerview.widget.RecyclerView;
 
 import com.example.currents.R;
 import com.example.currents.adapter.NewsAdapter;
-import com.example.currents.adapter.CarouselNewsAdapter; // Import the new adapter
+import com.example.currents.adapter.CarouselNewsAdapter;
 import com.example.currents.model.NewsItem;
-import com.google.android.material.appbar.MaterialToolbar;
 import com.google.android.material.search.SearchBar;
 import com.google.android.material.bottomnavigation.BottomNavigationView;
 
@@ -28,18 +28,19 @@ public class HomeActivity extends AppCompatActivity implements NewsAdapter.OnNew
     private RecyclerView verticalCardRecyclerView;
     private SearchBar searchBar;
     private BottomNavigationView bottomNavigationView;
-    private MaterialToolbar searchToolbar;
-    private SearchView appCompatSearchView;
 
     private NewsAdapter verticalNewsAdapter;
-    private CarouselNewsAdapter horizontalNewsAdapter; // Change type to CarouselNewsAdapter
+    private CarouselNewsAdapter horizontalNewsAdapter;
     private List<NewsItem> allNewsItems;
-    private List<NewsItem> savedNewsItems; // List for saved news
+    private List<NewsItem> savedNewsItems;
 
     public static final String EXTRA_NEWS_TITLE = "extra_news_title";
     public static final String EXTRA_NEWS_DATE = "extra_news_date";
     public static final String EXTRA_NEWS_IMAGE_RES_ID = "extra_news_image_res_id";
     public static final String EXTRA_NEWS_CONTENT = "extra_news_content";
+
+    // ActivityResultLauncher for starting SearchViewActivity and getting a result
+    private ActivityResultLauncher<Intent> searchActivityLauncher;
 
 
     @Override
@@ -53,89 +54,65 @@ public class HomeActivity extends AppCompatActivity implements NewsAdapter.OnNew
         searchBar = findViewById(R.id.searchBar);
         bottomNavigationView = findViewById(R.id.bottomNavigationView);
 
-        searchToolbar = findViewById(R.id.searchToolbar);
-        appCompatSearchView = findViewById(R.id.appCompatSearchView);
-
-        // Set up LinearLayoutManager for horizontal RecyclerView
-        horizontalCardRecyclerView.setLayoutManager(new LinearLayoutManager(this, LinearLayoutManager.HORIZONTAL, false));
-        // Initialize horizontal RecyclerView adapter with CarouselNewsAdapter
-        savedNewsItems = getSavedNewsData(); // Retrieve saved news data
-        horizontalNewsAdapter = new CarouselNewsAdapter(savedNewsItems, this); // Use 'this' as OnNewsClickListener
-        horizontalCardRecyclerView.setAdapter(horizontalNewsAdapter);
-
-        // Set up LinearLayoutManager for vertical RecyclerView
-        verticalCardRecyclerView.setLayoutManager(new LinearLayoutManager(this, LinearLayoutManager.VERTICAL, false));
-
+        // Initialize data first, so it's available for passing to search activity
         // --- Sample News Data ---
         allNewsItems = new ArrayList<>();
-        // Add sample news items for Sports
         allNewsItems.add(new NewsItem("Champions League Final Recap", "2024-05-28", R.drawable.news_placeholder, "Sports", getString(R.string.sample_news_content)));
         allNewsItems.add(new NewsItem("NBA Playoffs: Game 7 Thriller", "2024-05-27", R.drawable.news_placeholder, "Sports", getString(R.string.sample_news_content)));
         allNewsItems.add(new NewsItem("Local Marathon Results", "2024-05-26", R.drawable.news_placeholder, "Sports", getString(R.string.sample_news_content)));
         allNewsItems.add(new NewsItem("Cricket World Cup Preparations", "2024-05-25", R.drawable.news_placeholder, "Sports", getString(R.string.sample_news_content)));
 
-        // Add sample news items for Academic
         allNewsItems.add(new NewsItem("New AI Research Published", "2024-05-29", R.drawable.news_placeholder, "Academic", getString(R.string.sample_news_content)));
         allNewsItems.add(new NewsItem("University Hosts Tech Symposium", "2024-05-28", R.drawable.news_placeholder, "Academic", getString(R.string.sample_news_content)));
         allNewsItems.add(new NewsItem("Scholarship Opportunities for Students", "2024-05-27", R.drawable.news_placeholder, "Academic", getString(R.string.sample_news_content)));
         allNewsItems.add(new NewsItem("Breakthrough in Medical Science", "2024-05-26", R.drawable.news_placeholder, "Academic", getString(R.string.sample_news_content)));
 
-        // Add sample news items for Events
         allNewsItems.add(new NewsItem("Summer Music Festival Announced", "2024-05-30", R.drawable.news_placeholder, "Events", getString(R.string.sample_news_content)));
         allNewsItems.add(new NewsItem("Community Art Fair This Weekend", "2024-05-29", R.drawable.news_placeholder, "Events", getString(R.string.sample_news_content)));
         allNewsItems.add(new NewsItem("Annual Food Festival Dates", "2024-05-28", R.drawable.news_placeholder, "Events", getString(R.string.sample_news_content)));
         allNewsItems.add(new NewsItem("Local Charity Run Success", "2024-05-27", R.drawable.news_placeholder, "Events", getString(R.string.sample_news_content)));
 
 
-        // Initialize vertical RecyclerView adapter
+        // Register the ActivityResultLauncher
+        searchActivityLauncher = registerForActivityResult(
+                new ActivityResultContracts.StartActivityForResult(),
+                result -> {
+                    if (result.getResultCode() == RESULT_OK) {
+                        Intent data = result.getData();
+                        if (data != null && data.hasExtra(SearchViewActivity.EXTRA_SELECTED_NEWS_ITEM)) {
+                            NewsItem selectedNewsItem = (NewsItem) data.getSerializableExtra(SearchViewActivity.EXTRA_SELECTED_NEWS_ITEM);
+                            if (selectedNewsItem != null) {
+                                // A news item was selected in SearchViewActivity, open ReadNewsActivity
+                                onNewsClick(selectedNewsItem); // Reuse existing click handler
+                            }
+                        }
+                    }
+                }
+        );
+
+
+        // Set up LinearLayoutManager for horizontal RecyclerView
+        horizontalCardRecyclerView.setLayoutManager(new LinearLayoutManager(this, LinearLayoutManager.HORIZONTAL, false));
+        savedNewsItems = getSavedNewsData();
+        horizontalNewsAdapter = new CarouselNewsAdapter(savedNewsItems, this);
+        horizontalCardRecyclerView.setAdapter(horizontalNewsAdapter);
+
+        // Set up LinearLayoutManager for vertical RecyclerView
+        verticalCardRecyclerView.setLayoutManager(new LinearLayoutManager(this, LinearLayoutManager.VERTICAL, false));
         verticalNewsAdapter = new NewsAdapter(new ArrayList<>(), this);
         verticalCardRecyclerView.setAdapter(verticalNewsAdapter);
 
 
-        // --- SearchBar and SearchView Logic ---
+        // --- SearchBar Click Listener (Now launches SearchViewActivity) ---
         searchBar.setOnClickListener(v -> {
-            searchBar.setVisibility(View.GONE);
-            searchToolbar.setVisibility(View.VISIBLE);
-            appCompatSearchView.setIconified(false);
-            appCompatSearchView.requestFocus();
+            Intent intent = new Intent(HomeActivity.this, SearchViewActivity.class);
+            // Pass the entire list of news items for SearchViewActivity to filter
+            intent.putExtra(SearchViewActivity.EXTRA_ALL_NEWS_ITEMS, (ArrayList<NewsItem>) allNewsItems); // Cast to ArrayList for Serializable
+            searchActivityLauncher.launch(intent); // Use the launcher
         });
 
-        searchToolbar.setNavigationOnClickListener(v -> {
-            searchToolbar.setVisibility(View.GONE);
-            searchBar.setVisibility(View.VISIBLE);
-            appCompatSearchView.setQuery("", false);
-            appCompatSearchView.clearFocus();
-            filterNewsByCategory(getSelectedCategoryFromBottomNav());
-        });
 
-        appCompatSearchView.setOnQueryTextListener(new SearchView.OnQueryTextListener() {
-            @Override
-            public boolean onQueryTextSubmit(String query) {
-                Toast.makeText(HomeActivity.this, "Searching for: " + query, Toast.LENGTH_SHORT).show();
-                filterNewsByQuery(query);
-                appCompatSearchView.clearFocus();
-                return true;
-            }
-
-            @Override
-            public boolean onQueryTextChange(String newText) {
-                // If you want live search, uncomment and adjust this block
-                // if (!newText.isEmpty()) {
-                //     filterNewsByQuery(newText);
-                // } else {
-                //     filterNewsByCategory(getSelectedCategoryFromBottomNav());
-                // }
-                return false;
-            }
-        });
-
-        appCompatSearchView.setOnCloseListener(() -> {
-            appCompatSearchView.setQuery("", false);
-            appCompatSearchView.clearFocus();
-            filterNewsByCategory(getSelectedCategoryFromBottomNav());
-            return false;
-        });
-
+        // --- SearchBar Menu Item Clicks (top right menu on SearchBar) ---
         searchBar.setOnMenuItemClickListener(item -> {
             int itemId = item.getItemId();
             if (itemId == R.id.about) {
@@ -149,6 +126,7 @@ public class HomeActivity extends AppCompatActivity implements NewsAdapter.OnNew
             }
             return false;
         });
+
 
         // --- BottomNavigationView Logic ---
         bottomNavigationView.setOnItemSelectedListener(item -> {
@@ -166,7 +144,7 @@ public class HomeActivity extends AppCompatActivity implements NewsAdapter.OnNew
             return true;
         });
 
-        // Set initial state
+        // Set initial state: select Sports in bottom navigation and filter news accordingly
         bottomNavigationView.setSelectedItemId(R.id.navigation_sports);
         searchBar.setHint(getString(R.string.sports));
         filterNewsByCategory(getString(R.string.sports));
@@ -194,30 +172,8 @@ public class HomeActivity extends AppCompatActivity implements NewsAdapter.OnNew
         verticalNewsAdapter.setNewsList(filteredList);
     }
 
-    private void filterNewsByQuery(String query) {
-        if (query == null || query.trim().isEmpty()) {
-            filterNewsByCategory(getSelectedCategoryFromBottomNav());
-            return;
-        }
-
-        String currentCategory = getSelectedCategoryFromBottomNav();
-        List<NewsItem> currentCategoryNews;
-
-        if (currentCategory.isEmpty()) {
-            currentCategoryNews = allNewsItems;
-        } else {
-            currentCategoryNews = allNewsItems.stream()
-                    .filter(news -> news.getCategory().equalsIgnoreCase(currentCategory))
-                    .collect(Collectors.toList());
-        }
-
-        List<NewsItem> filteredByQuery = currentCategoryNews.stream()
-                .filter(news -> news.getTitle().toLowerCase().contains(query.toLowerCase()) ||
-                        news.getContent().toLowerCase().contains(query.toLowerCase()))
-                .collect(Collectors.toList());
-
-        verticalNewsAdapter.setNewsList(filteredByQuery);
-    }
+    // Removed filterNewsByQuery as search logic moved to SearchViewActivity
+    // private void filterNewsByQuery(String query) { /* ... */ }
 
     private String getSelectedCategoryFromBottomNav() {
         int selectedId = bottomNavigationView.getSelectedItemId();
@@ -231,23 +187,9 @@ public class HomeActivity extends AppCompatActivity implements NewsAdapter.OnNew
         return getString(R.string.sports);
     }
 
-    @Override
-    public void onBackPressed() {
-        if (searchToolbar.getVisibility() == View.VISIBLE) {
-            searchToolbar.setVisibility(View.GONE);
-            searchBar.setVisibility(View.VISIBLE);
-            appCompatSearchView.setQuery("", false);
-            appCompatSearchView.clearFocus();
-            filterNewsByCategory(getSelectedCategoryFromBottomNav());
-        } else {
-            super.onBackPressed();
-        }
-    }
-
     // --- Mock method to retrieve saved news data ---
     private List<NewsItem> getSavedNewsData() {
         List<NewsItem> saved = new ArrayList<>();
-        // Add some sample saved news items for demonstration
         saved.add(new NewsItem("Local Charity Run Success", "2024-05-27", R.drawable.news_placeholder, "Events", getString(R.string.sample_news_content)));
         saved.add(new NewsItem("NBA Playoffs: Game 7 Thriller", "2024-05-27", R.drawable.news_placeholder, "Sports", getString(R.string.sample_news_content)));
         saved.add(new NewsItem("New AI Research Published", "2024-05-29", R.drawable.news_placeholder, "Academic", getString(R.string.sample_news_content)));
@@ -263,5 +205,10 @@ public class HomeActivity extends AppCompatActivity implements NewsAdapter.OnNew
             savedNewsItems = getSavedNewsData();
             horizontalNewsAdapter.setNewsList(savedNewsItems);
         }
+    }
+
+    @Override
+    public void onBackPressed() {
+        super.onBackPressed();
     }
 }

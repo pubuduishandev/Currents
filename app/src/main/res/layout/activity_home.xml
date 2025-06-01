@@ -24,29 +24,6 @@
         app:strokeColor="@android:color/transparent"
         app:menu="@menu/searchbar_menu"/>
 
-    <com.google.android.material.appbar.MaterialToolbar
-        android:id="@+id/searchToolbar"
-        android:layout_width="0dp"
-        android:layout_height="?attr/actionBarSize"
-        android:visibility="gone"
-        android:background="@color/background_color"
-        app:layout_constraintEnd_toEndOf="parent"
-        app:layout_constraintStart_toStartOf="parent"
-        app:layout_constraintTop_toTopOf="parent"
-        app:navigationIcon="@drawable/arrow_back"
-        app:titleTextColor="@color/search_bar_background" >
-
-        <androidx.appcompat.widget.SearchView
-            android:id="@+id/appCompatSearchView"
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:iconifiedByDefault="false"
-            android:queryHint="@string/search_hint"
-            app:queryBackground="@android:color/transparent"
-            app:iconifiedByDefault="false"
-            app:searchIcon="@null"/>
-    </com.google.android.material.appbar.MaterialToolbar>
-
     <androidx.recyclerview.widget.RecyclerView
         android:id="@+id/horizontalCardRecyclerView"
         android:layout_width="0dp"

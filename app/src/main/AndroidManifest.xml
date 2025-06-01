@@ -65,6 +65,10 @@
         <activity
             android:name=".activity.ResetPasswordActivity"
             android:exported="false" />
+
+        <activity
+            android:name=".activity.SearchViewActivity"
+            android:exported="false" />
     </application>
 
 </manifest>
