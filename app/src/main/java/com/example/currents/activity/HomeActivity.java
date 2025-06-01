@@ -157,7 +157,7 @@ public class HomeActivity extends AppCompatActivity implements NewsAdapter.OnNew
         // --- SearchBar Menu Item Clicks (top right menu on SearchBar) ---
         searchBar.setOnMenuItemClickListener(item -> {
             int itemId = item.getItemId();
-            if (itemId == R.id.developer_info) {
+            if (itemId == R.id.about) {
                 // Navigate to DeveloperInfoActivity
                 Intent intent = new Intent(HomeActivity.this, AboutActivity.class); // Assuming AboutActivity is your developer info screen
                 startActivity(intent);

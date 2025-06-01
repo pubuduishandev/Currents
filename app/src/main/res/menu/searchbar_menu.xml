@@ -1,13 +1,13 @@
 <?xml version="1.0" encoding="utf-8"?>
 <menu xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:app="http://schemas.android.com/apk/res-auto">
-    <item android:id="@+id/developer_info"
-        android:icon="@drawable/developer"
-        android:title="@string/developer_info"
+    <item android:id="@+id/about"
+        android:icon="@drawable/about"
+        android:title="@string/about"
         app:showAsAction="ifRoom" />
 
     <item android:id="@+id/profile"
         android:icon="@drawable/profile"
-        android:title="@string/profile_button"
+        android:title="@string/profile"
         app:showAsAction="ifRoom" />
 </menu>
