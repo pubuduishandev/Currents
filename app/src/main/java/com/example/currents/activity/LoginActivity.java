@@ -119,13 +119,11 @@ public class LoginActivity extends AppCompatActivity {
 
                 // --- Proceed if all fields are valid ---
                 if (isValid) {
-                    Toast.makeText(LoginActivity.this, "Login successful!", Toast.LENGTH_SHORT).show();
+                    Toast.makeText(LoginActivity.this, "Login successful", Toast.LENGTH_SHORT).show();
                     // Navigate to the main activity (e.g., HomeActivity)
                     Intent intent = new Intent(LoginActivity.this, HomeActivity.class);
                     startActivity(intent);
                     finish(); // Finish LoginActivity so user can't go back
-                } else {
-                    Toast.makeText(LoginActivity.this, "Please correct the errors to log in", Toast.LENGTH_SHORT).show();
                 }
             }
         });
@@ -134,7 +132,6 @@ public class LoginActivity extends AppCompatActivity {
         forgotPasswordText.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
-                Toast.makeText(LoginActivity.this, "Forgot Password Clicked", Toast.LENGTH_SHORT).show();
                 Intent intent = new Intent(LoginActivity.this, ForgotPasswordActivity.class);
                 startActivity(intent);
             }
