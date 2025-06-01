@@ -2,7 +2,9 @@ package com.example.currents.activity;
 
 import android.content.Intent;
 import android.os.Bundle;
+import android.text.Editable; // Import Editable
 import android.text.TextUtils;
+import android.text.TextWatcher; // Import TextWatcher
 import android.util.Patterns;
 import android.view.View;
 import android.widget.LinearLayout;
@@ -13,10 +15,7 @@ import androidx.appcompat.app.AppCompatActivity;
 import com.example.currents.R;
 import com.google.android.material.button.MaterialButton;
 import com.google.android.material.textfield.TextInputEditText;
-
-// Assuming you have a LoginActivity and a placeholder for MainActivity
-// If you don't have LoginActivity or MainActivity yet, you'll need to create them.
-// For example, an empty Activity named LoginActivity.java and MainActivity.java
+import com.google.android.material.textfield.TextInputLayout; // Import TextInputLayout
 
 public class SignupActivity extends AppCompatActivity {
 
@@ -28,13 +27,15 @@ public class SignupActivity extends AppCompatActivity {
     private TextInputEditText passwordEditText;
     private TextInputEditText confirmPasswordEditText;
     private MaterialButton signupButton;
-    private LinearLayout signinTextContainer; // For "Already have an account? Sign In" link
+    private LinearLayout signinTextContainer;
 
-    // Developer info TextViews (Optional, if you want to reference them in Java)
-    // private TextView developerInfoConcept;
-    // private TextView developerInfoDept;
-    // private TextView developerInfoFaculty;
-    // private TextView appVersion;
+    // Declare TextInputLayout references
+    private TextInputLayout firstNameInputLayout;
+    private TextInputLayout lastNameInputLayout;
+    private TextInputLayout userNameInputLayout; // Renamed to match XML ID
+    private TextInputLayout emailInputLayout;
+    private TextInputLayout passwordInputLayout;
+    private TextInputLayout confirmPasswordInputLayout;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -44,18 +45,30 @@ public class SignupActivity extends AppCompatActivity {
         // Initialize UI elements
         firstNameEditText = findViewById(R.id.first_name_edit_text);
         lastNameEditText = findViewById(R.id.last_name_edit_text);
-        userNameEditText = findViewById(R.id.student_id_edit_text);
+        userNameEditText = findViewById(R.id.user_name_edit_text); // Matches XML ID now
         emailEditText = findViewById(R.id.email_edit_text);
         passwordEditText = findViewById(R.id.password_edit_text);
         confirmPasswordEditText = findViewById(R.id.confirm_password_edit_text);
         signupButton = findViewById(R.id.signup_button);
         signinTextContainer = findViewById(R.id.signin_text_container);
 
-        // If you need to access developer info TextViews in Java, uncomment these:
-        // developerInfoConcept = findViewById(R.id.developer_info_concept);
-        // developerInfoDept = findViewById(R.id.developer_info_dept);
-        // developerInfoFaculty = findViewById(R.id.developer_info_faculty);
-        // appVersion = findViewById(R.id.app_version);
+        // Initialize TextInputLayout references
+        firstNameInputLayout = findViewById(R.id.first_name_input_layout);
+        lastNameInputLayout = findViewById(R.id.last_name_input_layout);
+        userNameInputLayout = findViewById(R.id.user_name_input_layout); // Matches XML ID now
+        emailInputLayout = findViewById(R.id.email_input_layout);
+        passwordInputLayout = findViewById(R.id.password_input_layout);
+        confirmPasswordInputLayout = findViewById(R.id.confirm_password_input_layout);
+
+
+        // --- Add TextWatchers to clear errors as user types ---
+        firstNameEditText.addTextChangedListener(new GenericTextWatcher(firstNameInputLayout));
+        lastNameEditText.addTextChangedListener(new GenericTextWatcher(lastNameInputLayout));
+        userNameEditText.addTextChangedListener(new GenericTextWatcher(userNameInputLayout));
+        emailEditText.addTextChangedListener(new GenericTextWatcher(emailInputLayout));
+        passwordEditText.addTextChangedListener(new GenericTextWatcher(passwordInputLayout));
+        confirmPasswordEditText.addTextChangedListener(new GenericTextWatcher(confirmPasswordInputLayout));
+        // --- End TextWatchers ---
 
 
         // Set OnClickListener for the Sign Up Button
@@ -76,104 +89,148 @@ public class SignupActivity extends AppCompatActivity {
     }
 
     /**
+     * Helper class for TextWatcher to avoid repetitive code for each field.
+     * Clears error when text changes.
+     */
+    private class GenericTextWatcher implements TextWatcher {
+        private final TextInputLayout textInputLayout;
+
+        private GenericTextWatcher(TextInputLayout textInputLayout) {
+            this.textInputLayout = textInputLayout;
+        }
+
+        @Override
+        public void beforeTextChanged(CharSequence s, int start, int count, int after) {}
+
+        @Override
+        public void onTextChanged(CharSequence s, int start, int before, int count) {
+            if (textInputLayout.isErrorEnabled()) {
+                textInputLayout.setError(null);
+                textInputLayout.setErrorEnabled(false);
+            }
+        }
+
+        @Override
+        public void afterTextChanged(Editable s) {}
+    }
+
+
+    /**
      * Attempts to sign up the account specified by the signup form.
      * If there are form errors (invalid email, missing fields, etc.), the
      * errors are presented and no actual signup attempt is made.
      */
     private void attemptSignup() {
-        // Reset errors
-//        firstNameEditText.setError(null);
-//        lastNameEditText.setError(null);
-//        userNameEditText.setError(null);
-//        emailEditText.setError(null);
-//        passwordEditText.setError(null);
-//        confirmPasswordEditText.setError(null);
-//
-//        // Store values at the time of the signup attempt.
-//        String firstName = firstNameEditText.getText().toString().trim();
-//        String lastName = lastNameEditText.getText().toString().trim();
-//        String userName = userNameEditText.getText().toString().trim();
-//        String email = emailEditText.getText().toString().trim();
-//        String password = passwordEditText.getText().toString().trim();
-//        String confirmPassword = confirmPasswordEditText.getText().toString().trim();
-//
-//        boolean cancel = false;
-//        View focusView = null; // View to focus if an error occurs
-//
-//        // 1. Check if all fields are filled & other validations
-//        // Check for First Name
-//        if (TextUtils.isEmpty(firstName)) {
-//            firstNameEditText.setError("First Name is required");
-//            focusView = firstNameEditText;
-//            cancel = true;
-//        }
-//
-//        // Check for Last Name
-//        if (TextUtils.isEmpty(lastName)) {
-//            lastNameEditText.setError("Last Name is required");
-//            if (focusView == null) focusView = lastNameEditText;
-//            cancel = true;
-//        }
-//
-//        // Check for Student ID
-//        if (TextUtils.isEmpty(userName)) {
-//            userNameEditText.setError("Username is required");
-//            if (focusView == null) focusView = userNameEditText;
-//            cancel = true;
-//        } else if (userName.length() < 5) { // Example: Student ID must be at least 5 characters
-//            userNameEditText.setError("Username must be at least 5 characters");
-//            if (focusView == null) focusView = userNameEditText;
-//            cancel = true;
-//        }
-//
-//        // 2. Check for a valid email address.
-//        if (TextUtils.isEmpty(email)) {
-//            emailEditText.setError("Email is required");
-//            if (focusView == null) focusView = emailEditText;
-//            cancel = true;
-//        } else if (!Patterns.EMAIL_ADDRESS.matcher(email).matches()) {
-//            emailEditText.setError("Enter a valid email address");
-//            if (focusView == null) focusView = emailEditText;
-//            cancel = true;
-//        }
-//
-//        // Check for password
-//        if (TextUtils.isEmpty(password)) {
-//            passwordEditText.setError("Password is required");
-//            if (focusView == null) focusView = passwordEditText;
-//            cancel = true;
-//        } else if (password.length() < 6) { // Example: Password must be at least 6 characters
-//            passwordEditText.setError("Password too short (min 6 characters)");
-//            if (focusView == null) focusView = passwordEditText;
-//            cancel = true;
-//        }
-//
-//        // Check for confirm password
-//        if (TextUtils.isEmpty(confirmPassword)) {
-//            confirmPasswordEditText.setError("Confirm Password is required");
-//            if (focusView == null) focusView = confirmPasswordEditText;
-//            cancel = true;
-//        } else if (!confirmPassword.equals(password)) { // 3. password and confirm password are same
-//            confirmPasswordEditText.setError("Passwords do not match");
-//            if (focusView == null) focusView = confirmPasswordEditText;
-//            cancel = true;
-//        }
-//
-//
-//        if (cancel) {
-//            // There was an error; don't attempt signup and focus the first form field with an error.
-//            if (focusView != null) {
-//                focusView.requestFocus();
-//            }
-//        } else {
-//            // All validations are success
-//            Toast.makeText(SignupActivity.this, "Account Created Successfully", Toast.LENGTH_LONG).show();
-//            navigateToHome();
-//        }
+        // Clear previous errors for all fields
+        firstNameInputLayout.setError(null);
+        lastNameInputLayout.setError(null);
+        userNameInputLayout.setError(null);
+        emailInputLayout.setError(null);
+        passwordInputLayout.setError(null);
+        confirmPasswordInputLayout.setError(null);
+
+        firstNameInputLayout.setErrorEnabled(false);
+        lastNameInputLayout.setErrorEnabled(false);
+        userNameInputLayout.setErrorEnabled(false);
+        emailInputLayout.setErrorEnabled(false);
+        passwordInputLayout.setErrorEnabled(false);
+        confirmPasswordInputLayout.setErrorEnabled(false);
 
 
+        // Store values at the time of the signup attempt.
+        String firstName = firstNameEditText.getText().toString().trim();
+        String lastName = lastNameEditText.getText().toString().trim();
+        String userName = userNameEditText.getText().toString().trim(); // Corresponds to student_id_edit_text
+        String email = emailEditText.getText().toString().trim();
+        String password = passwordEditText.getText().toString().trim();
+        String confirmPassword = confirmPasswordEditText.getText().toString().trim();
 
-        navigateToHome();
+        boolean cancel = false;
+        View focusView = null; // View to focus if an error occurs
+
+        // 1. Check if all fields are filled & other validations
+
+        // Check for Confirm Password
+        if (TextUtils.isEmpty(confirmPassword)) {
+            confirmPasswordInputLayout.setError("Confirm Password is required");
+            confirmPasswordInputLayout.setErrorEnabled(true);
+            focusView = confirmPasswordEditText;
+            cancel = true;
+        } else if (!confirmPassword.equals(password)) {
+            confirmPasswordInputLayout.setError("Passwords do not match");
+            confirmPasswordInputLayout.setErrorEnabled(true);
+            focusView = confirmPasswordEditText;
+            cancel = true;
+        }
+
+        // Check for Password
+        if (TextUtils.isEmpty(password)) {
+            passwordInputLayout.setError("Password is required");
+            passwordInputLayout.setErrorEnabled(true);
+            if (focusView == null) focusView = passwordEditText; // Set focus if no other error found yet
+            cancel = true;
+        } else if (password.length() < 6) { // Example: Password must be at least 6 characters
+            passwordInputLayout.setError("Password too short (min 6 characters)");
+            passwordInputLayout.setErrorEnabled(true);
+            if (focusView == null) focusView = passwordEditText;
+            cancel = true;
+        }
+
+        // Check for Email
+        if (TextUtils.isEmpty(email)) {
+            emailInputLayout.setError("Email is required");
+            emailInputLayout.setErrorEnabled(true);
+            if (focusView == null) focusView = emailEditText;
+            cancel = true;
+        } else if (!Patterns.EMAIL_ADDRESS.matcher(email).matches()) {
+            emailInputLayout.setError("Enter a valid email address");
+            emailInputLayout.setErrorEnabled(true);
+            if (focusView == null) focusView = emailEditText;
+            cancel = true;
+        }
+
+        // Check for Username
+        if (TextUtils.isEmpty(userName)) {
+            userNameInputLayout.setError("Username is required");
+            userNameInputLayout.setErrorEnabled(true);
+            if (focusView == null) focusView = userNameEditText;
+            cancel = true;
+        } else if (userName.length() < 5) { // Example: Username must be at least 5 characters
+            userNameInputLayout.setError("Username must be at least 5 characters");
+            userNameInputLayout.setErrorEnabled(true);
+            if (focusView == null) focusView = userNameEditText;
+            cancel = true;
+        }
+
+        // Check for Last Name
+        if (TextUtils.isEmpty(lastName)) {
+            lastNameInputLayout.setError("Last Name is required");
+            lastNameInputLayout.setErrorEnabled(true);
+            if (focusView == null) focusView = lastNameEditText;
+            cancel = true;
+        }
+
+        // Check for First Name (done last so it gets focus if all are empty)
+        if (TextUtils.isEmpty(firstName)) {
+            firstNameInputLayout.setError("First Name is required");
+            firstNameInputLayout.setErrorEnabled(true);
+            if (focusView == null) focusView = firstNameEditText;
+            cancel = true;
+        }
+
+
+        if (cancel) {
+            // There was an error; don't attempt signup and focus the first form field with an error.
+            if (focusView != null) {
+                focusView.requestFocus();
+            }
+            Toast.makeText(SignupActivity.this, "Please fix the errors to sign up", Toast.LENGTH_SHORT).show();
+        } else {
+            // All validations are success
+            Toast.makeText(SignupActivity.this, "Account Created Successfully", Toast.LENGTH_LONG).show();
+            // In a real app, you would send this data to a server for registration
+            navigateToHome();
+        }
     }
 
     /**
@@ -190,9 +247,10 @@ public class SignupActivity extends AppCompatActivity {
      * This will be the main screen after successful signup.
      */
     private void navigateToHome() {
-        // Replace MainActivity.class with your actual Home Activity when it's ready.
+        // Replace HomeActivity.class with your actual Home Activity when it's ready.
         Intent intent = new Intent(SignupActivity.this, HomeActivity.class);
-        intent.setFlags(Intent.FLAG_ACTIVITY_NEW_TASK | Intent.FLAG_ACTIVITY_CLEAR_TASK); // Clears back stack
+        // Clear back stack to prevent going back to signup/login after successful registration
+        intent.setFlags(Intent.FLAG_ACTIVITY_NEW_TASK | Intent.FLAG_ACTIVITY_CLEAR_TASK);
         startActivity(intent);
         finish(); // Finish SignupActivity
     }
