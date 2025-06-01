@@ -80,7 +80,7 @@ public class ForgotPasswordActivity extends AppCompatActivity {
                 }
 
                 if (isValid) {
-                    Toast.makeText(ForgotPasswordActivity.this, "OTP requested for: " + email, Toast.LENGTH_SHORT).show();
+                    Toast.makeText(ForgotPasswordActivity.this, "OTP sent", Toast.LENGTH_SHORT).show();
                     // Navigate to VerifyOtpActivity and pass the email
                     Intent intent = new Intent(ForgotPasswordActivity.this, VerifyOtpActivity.class);
                     intent.putExtra("email", email); // Pass the email as an extra

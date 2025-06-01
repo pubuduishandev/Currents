@@ -123,7 +123,7 @@ public class ResetPasswordActivity extends AppCompatActivity {
                     // In a real application, you would send the new password to your backend
                     // along with any user identification (e.g., email or verification token)
                     // retrieved from the previous screens.
-                    Toast.makeText(ResetPasswordActivity.this, "Password reset successfully!", Toast.LENGTH_SHORT).show();
+                    Toast.makeText(ResetPasswordActivity.this, "Password reset successfully", Toast.LENGTH_SHORT).show();
 
                     // Navigate to HomeActivity (or LoginActivity) after successful password reset
                     Intent intent = new Intent(ResetPasswordActivity.this, HomeActivity.class); // Assuming HomeActivity is your main screen
@@ -131,8 +131,6 @@ public class ResetPasswordActivity extends AppCompatActivity {
                     intent.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK | Intent.FLAG_ACTIVITY_CLEAR_TASK);
                     startActivity(intent);
                     finish(); // Finish current activity
-                } else {
-                    Toast.makeText(ResetPasswordActivity.this, "Please fix the errors to reset password", Toast.LENGTH_SHORT).show();
                 }
             }
         });

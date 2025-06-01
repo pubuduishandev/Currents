@@ -96,7 +96,7 @@ public class VerifyOtpActivity extends AppCompatActivity {
                     // In a real application, you would send this OTP to your backend for verification.
                     // For now, we'll simulate success and navigate to ResetPasswordActivity.
 
-                    Toast.makeText(VerifyOtpActivity.this, "OTP entered: " + otp, Toast.LENGTH_SHORT).show();
+                    Toast.makeText(VerifyOtpActivity.this, "OTP verified", Toast.LENGTH_SHORT).show();
 
                     // Stop the timer when OTP is successfully entered/verified
                     if (countDownTimer != null) {
