@@ -8,7 +8,7 @@
     app:cardCornerRadius="16dp"
     app:cardElevation="4dp"
     app:strokeColor="@android:color/transparent"
-    app:cardBackgroundColor="@color/search_bar_background"> <LinearLayout
+    app:cardBackgroundColor="@color/card_background"> <LinearLayout
     android:layout_width="match_parent"
     android:layout_height="wrap_content"
     android:orientation="vertical">
@@ -16,7 +16,7 @@
     <ImageView
         android:id="@+id/newsImageView"
         android:layout_width="match_parent"
-        android:layout_height="140dp"
+        android:layout_height="120dp"
         android:scaleType="centerCrop"
         android:src="@drawable/news_placeholder"
         android:contentDescription="@string/news_title" />
@@ -27,6 +27,7 @@
         android:layout_height="wrap_content"
         android:text="@string/news_title"
         android:textAppearance="?attr/textAppearanceTitleMedium"
+        android:textStyle="bold"
         android:textColor="@color/text_primary"
         android:layout_marginStart="16dp"
         android:layout_marginEnd="16dp"
