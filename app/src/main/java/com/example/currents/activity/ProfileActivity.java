@@ -1,12 +1,16 @@
 package com.example.currents.activity; // Adjust package name
 
 import android.annotation.SuppressLint;
+import android.content.Context; // Import for SharedPreferences
 import android.content.Intent;
+import android.content.SharedPreferences; // Import for SharedPreferences
 import android.os.Bundle;
+import android.text.format.DateUtils; // For formatting time
 import android.view.Menu;
 import android.view.MenuInflater;
 import android.view.MenuItem;
 import android.view.View;
+import android.widget.LinearLayout; // Ensure this is imported if you use it in the layout
 import android.widget.TextView;
 import android.widget.Toast;
 
@@ -16,10 +20,12 @@ import androidx.cardview.widget.CardView;
 
 import com.example.currents.R;
 import com.example.currents.ui.bottomsheet.ChangePasswordBottomSheet;
-import com.example.currents.ui.bottomsheet.EditProfileBottomSheet; // Import your new BottomSheet
+import com.example.currents.ui.bottomsheet.EditProfileBottomSheet;
+import com.google.firebase.auth.FirebaseAuth; // Import FirebaseAuth for logout
+
+import java.util.Date; // For Date object
 
 public class ProfileActivity extends AppCompatActivity implements EditProfileBottomSheet.OnProfileEditedListener {
-    // Implement the interface
 
     private Toolbar toolbar;
     private TextView avatarInitialsTextView;
@@ -29,14 +35,24 @@ public class ProfileActivity extends AppCompatActivity implements EditProfileBot
     private TextView emailValue;
     private TextView passwordValue;
     private CardView passwordCard;
+    private LinearLayout logoutCard; // Assuming you have a card/view for logout
 
-    // Store the current profile data
-    private String currentFirstName = "Pubudu";
-    private String currentLastName = "Ishan";
-    private String currentUsername = "pubuduishan";
-    private String currentEmail = "2020t00876@stu.cmb.ac.lk";
-    private String currentPasswordStatus = "Changed one month ago";
+    // SharedPreferences name and keys (MUST MATCH LoginActivity/SignupActivity)
+    private static final String PREF_NAME = "CurrentUserPrefs";
+    private static final String KEY_USER_UID = "user_uid";
+    private static final String KEY_USERNAME = "username";
+    private static final String KEY_FIRST_NAME = "first_name";
+    private static final String KEY_LAST_NAME = "last_name";
+    private static final String KEY_EMAIL = "email";
+    private static final String KEY_LAST_PASSWORD_CHANGE = "last_password_change"; // Stored as long (milliseconds)
 
+    // Member variables to hold the current profile data
+    private String currentUid;
+    private String currentFirstName;
+    private String currentLastName;
+    private String currentUsername;
+    private String currentEmail;
+    private long currentLastPasswordChangeMillis; // Store as long
 
     @SuppressLint("MissingInflatedId")
     @Override
@@ -61,7 +77,11 @@ public class ProfileActivity extends AppCompatActivity implements EditProfileBot
         passwordValue = findViewById(R.id.passwordValue);
         passwordCard = findViewById(R.id.passwordCard);
 
-        // Set initial data
+
+        // --- Retrieve data from SharedPreferences ---
+        loadProfileDataFromSharedPreferences();
+
+        // Set initial data to UI
         updateProfileUI();
 
 
@@ -73,7 +93,31 @@ public class ProfileActivity extends AppCompatActivity implements EditProfileBot
                 bottomSheet.show(getSupportFragmentManager(), bottomSheet.getTag());
             }
         });
+
+        // Set click listener for the Logout card/button
+        if (logoutCard != null) { // Check if the logoutCard exists in your layout
+            logoutCard.setOnClickListener(new View.OnClickListener() {
+                @Override
+                public void onClick(View v) {
+                    signOutUser();
+                }
+            });
+        }
     }
+
+    // New method to load profile data from SharedPreferences
+    private void loadProfileDataFromSharedPreferences() {
+        SharedPreferences sharedPref = getSharedPreferences(PREF_NAME, Context.MODE_PRIVATE);
+
+        currentUid = sharedPref.getString(KEY_USER_UID, null);
+        currentUsername = sharedPref.getString(KEY_USERNAME, "N/A"); // Default value if not found
+        currentFirstName = sharedPref.getString(KEY_FIRST_NAME, "N/A");
+        currentLastName = sharedPref.getString(KEY_LAST_NAME, "N/A");
+        currentEmail = sharedPref.getString(KEY_EMAIL, "N/A");
+        // For Timestamp, retrieve as long (milliseconds). Default to 0 or a sensible value if not found.
+        currentLastPasswordChangeMillis = sharedPref.getLong(KEY_LAST_PASSWORD_CHANGE, 0L);
+    }
+
 
     // Helper method to update all UI elements
     private void updateProfileUI() {
@@ -85,11 +129,25 @@ public class ProfileActivity extends AppCompatActivity implements EditProfileBot
             initials += currentLastName.charAt(0);
         }
         avatarInitialsTextView.setText(initials.toUpperCase());
-        userNameTextView.setText(currentFirstName + " " + currentLastName);
-        fullNameValue.setText(currentFirstName + " " + currentLastName);
+
+        String fullName = currentFirstName + " " + currentLastName;
+        userNameTextView.setText(fullName);
+        fullNameValue.setText(fullName);
         usernameValue.setText(currentUsername);
         emailValue.setText(currentEmail);
-        passwordValue.setText(currentPasswordStatus);
+
+        // Format the last password change date
+        if (currentLastPasswordChangeMillis > 0) {
+            String timeAgo = DateUtils.getRelativeTimeSpanString(
+                    currentLastPasswordChangeMillis,
+                    System.currentTimeMillis(),
+                    DateUtils.MINUTE_IN_MILLIS,
+                    DateUtils.FORMAT_ABBREV_RELATIVE
+            ).toString();
+            passwordValue.setText("Changed " + timeAgo);
+        } else {
+            passwordValue.setText("Never changed or N/A");
+        }
     }
 
 
@@ -119,13 +177,8 @@ public class ProfileActivity extends AppCompatActivity implements EditProfileBot
             Intent intent = new Intent(ProfileActivity.this, SavedNewsActivity.class);
             startActivity(intent);
             return true;
-        } else if (id == R.id.action_more) { // This is your "Sign out" item
-            // Navigate to LoginActivity and clear back stack
-            Intent intent = new Intent(ProfileActivity.this, LoginActivity.class);
-            intent.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK | Intent.FLAG_ACTIVITY_CLEAR_TASK); // Clear back stack
-            startActivity(intent);
-            Toast.makeText(ProfileActivity.this, "Logout successful", Toast.LENGTH_SHORT).show();
-            finish(); // Finish the current activity
+        } else if (id == R.id.action_more) { // This is your "Sign out" item in the toolbar menu
+            signOutUser();
             return true;
         }
 
@@ -150,7 +203,68 @@ public class ProfileActivity extends AppCompatActivity implements EditProfileBot
         // Update the UI
         updateProfileUI();
 
+        // IMPORTANT: You should also save this updated data to Firestore here
+        // (and potentially update SharedPreferences if you want the local copy to be immediately current)
+        // For example:
+        // saveUpdatedProfileToFirestore(firstName, lastName, username, email);
+
         Toast.makeText(this, "Profile updated!", Toast.LENGTH_SHORT).show();
-        // Here you would typically save the updated data to your backend or local storage
     }
+
+    // Method to handle user sign out
+    private void signOutUser() {
+        FirebaseAuth.getInstance().signOut(); // Actual Firebase sign out
+
+        // Clear SharedPreferences
+        SharedPreferences sharedPref = getSharedPreferences(PREF_NAME, Context.MODE_PRIVATE);
+        SharedPreferences.Editor editor = sharedPref.edit();
+        editor.clear(); // Clears all data
+        editor.apply();
+
+        Toast.makeText(ProfileActivity.this, "Logout successful", Toast.LENGTH_SHORT).show();
+
+        // Navigate to LoginActivity and clear back stack
+        Intent intent = new Intent(ProfileActivity.this, LoginActivity.class);
+        intent.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK | Intent.FLAG_ACTIVITY_CLEAR_TASK); // Clear back stack
+        startActivity(intent);
+        finish(); // Finish the current activity
+    }
+
+    // Optional: Method to save updated profile data to Firestore
+    // You would call this from onProfileEdited() after user confirms changes
+    /*
+    private void saveUpdatedProfileToFirestore(String firstName, String lastName, String username, String email) {
+        if (currentUid == null) {
+            Toast.makeText(this, "User not logged in or UID missing.", Toast.LENGTH_SHORT).show();
+            return;
+        }
+
+        FirebaseFirestore db = FirebaseFirestore.getInstance();
+        Map<String, Object> updates = new HashMap<>();
+        updates.put(KEY_FIRST_NAME, firstName);
+        updates.put(KEY_LAST_NAME, lastName);
+        updates.put(KEY_USERNAME, username);
+        updates.put(KEY_EMAIL, email); // Update email if allowed by Firebase Auth
+        updates.put("updatedAt", FieldValue.serverTimestamp()); // Update timestamp
+
+        db.collection("users").document(currentUid)
+                .update(updates)
+                .addOnSuccessListener(aVoid -> {
+                    Toast.makeText(ProfileActivity.this, "Profile saved to server!", Toast.LENGTH_SHORT).show();
+                    // If successfully saved to Firestore, update SharedPreferences too
+                    SharedPreferences sharedPref = getSharedPreferences(PREF_NAME, Context.MODE_PRIVATE);
+                    SharedPreferences.Editor editor = sharedPref.edit();
+                    editor.putString(KEY_FIRST_NAME, firstName);
+                    editor.putString(KEY_LAST_NAME, lastName);
+                    editor.putString(KEY_USERNAME, username);
+                    editor.putString(KEY_EMAIL, email);
+                    // Note: currentLastPasswordChangeMillis, createdAt, lastLogin are not updated here
+                    editor.apply();
+                })
+                .addOnFailureListener(e -> {
+                    Toast.makeText(ProfileActivity.this, "Failed to save profile: " + e.getMessage(), Toast.LENGTH_SHORT).show();
+                    Log.e(TAG, "Error updating profile in Firestore", e);
+                });
+    }
+    */
 }
