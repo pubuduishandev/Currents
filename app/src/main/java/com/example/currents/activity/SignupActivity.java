@@ -413,7 +413,7 @@ public class SignupActivity extends AppCompatActivity {
                                             Toast.LENGTH_LONG).show();
                                 } else {
                                     Log.e(TAG, "Failed to delete user from Auth after Firestore save failure.", deleteTask.getException());
-                                    Toast.makeText(SignupActivity.this, "Account created, but a database error occurred. Please contact support.",
+                                    Toast.makeText(SignupActivity.this, "Account created, but a database error occurred.",
                                             Toast.LENGTH_LONG).show();
                                 }
                                 resetSignupForm();
