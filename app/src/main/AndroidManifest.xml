@@ -35,7 +35,7 @@
             android:exported="false" />
 
         <activity
-            android:name=".activity.HomeActivity"
+            android:name=".activity.ForgotPasswordActivity"
             android:exported="false" />
 
         <activity
@@ -43,11 +43,15 @@
             android:exported="false" />
 
         <activity
-            android:name=".activity.SavedNewsActivity"
+            android:name=".activity.HomeActivity"
             android:exported="false" />
 
         <activity
-            android:name=".activity.AboutActivity"
+            android:name=".activity.SearchViewActivity"
+            android:exported="false" />
+
+        <activity
+            android:name=".activity.SavedNewsActivity"
             android:exported="false" />
 
         <activity
@@ -55,19 +59,7 @@
             android:exported="false" />
 
         <activity
-            android:name=".activity.ForgotPasswordActivity"
-            android:exported="false" />
-
-        <activity
-            android:name=".activity.VerifyOtpActivity"
-            android:exported="false" />
-
-        <activity
-            android:name=".activity.ResetPasswordActivity"
-            android:exported="false" />
-
-        <activity
-            android:name=".activity.SearchViewActivity"
+            android:name=".activity.AboutActivity"
             android:exported="false" />
     </application>
 
