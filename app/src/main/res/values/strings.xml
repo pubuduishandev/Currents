@@ -52,6 +52,7 @@
     <string name="warning_message">Your account was created with this email, so it cannot be edited here.</string>
     <string name="privacy_and_security_header">PRIVACY AND SECURITY</string>
     <string name="password_changed_time">Changed one month ago</string>
+    <string name="change_password_instructions">Please verify user before change password. Enter your current password here</string>
     <string name="news_title">News Article Title</string>
     <string name="news_image_placeholder">News Image</string>
     <string name="sample_news_content">
