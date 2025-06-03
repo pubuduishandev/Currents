@@ -1,10 +1,11 @@
-package com.example.currents.ui.bottomsheet; // Adjust package name
+package com.example.currents.ui.bottomsheet;
 
 import android.os.Bundle;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
 import android.widget.Button;
+import android.widget.TextView; // Import TextView
 import android.widget.Toast;
 
 import androidx.annotation.NonNull;
@@ -12,7 +13,8 @@ import androidx.annotation.Nullable;
 
 import com.google.android.material.bottomsheet.BottomSheetDialogFragment;
 import com.google.android.material.textfield.TextInputEditText;
-import com.example.currents.R; // Make sure this R points to your project's R file
+import com.google.android.material.textfield.TextInputLayout; // Import TextInputLayout
+import com.example.currents.R;
 
 public class EditProfileBottomSheet extends BottomSheetDialogFragment {
 
@@ -22,10 +24,12 @@ public class EditProfileBottomSheet extends BottomSheetDialogFragment {
     private TextInputEditText emailField;
     private Button cancelButton;
     private Button okButton;
+    private TextView emailWarningTextView; // New TextView for the warning message
+    private TextInputLayout emailLayout; // To access the parent layout of emailField
 
-    // Interface to communicate changes back to ProfileActivity
+    // Modified Interface: Email is no longer edited here, so remove it from the listener
     public interface OnProfileEditedListener {
-        void onProfileEdited(String firstName, String lastName, String username, String email);
+        void onProfileEdited(String newFirstName, String newLastName, String newUsername);
     }
 
     private OnProfileEditedListener listener;
@@ -36,7 +40,7 @@ public class EditProfileBottomSheet extends BottomSheetDialogFragment {
         args.putString("firstName", currentFirstName);
         args.putString("lastName", currentLastName);
         args.putString("username", currentUsername);
-        args.putString("email", currentEmail);
+        args.putString("email", currentEmail); // Still pass email to display it
         fragment.setArguments(args);
         return fragment;
     }
@@ -44,14 +48,12 @@ public class EditProfileBottomSheet extends BottomSheetDialogFragment {
     @Override
     public void onCreate(@Nullable Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
-        // Ensure the hosting activity implements the listener
         if (getParentFragment() instanceof OnProfileEditedListener) {
             listener = (OnProfileEditedListener) getParentFragment();
         } else if (getActivity() instanceof OnProfileEditedListener) {
             listener = (OnProfileEditedListener) getActivity();
         } else {
-            // Optional: throw an exception if the listener is not implemented
-            // throw new RuntimeException(context.toString() + " must implement OnProfileEditedListener");
+            // Consider throwing an exception here if the listener contract is strict
         }
     }
 
@@ -66,6 +68,8 @@ public class EditProfileBottomSheet extends BottomSheetDialogFragment {
         emailField = view.findViewById(R.id.emailField);
         cancelButton = view.findViewById(R.id.cancelButton);
         okButton = view.findViewById(R.id.okButton);
+        emailWarningTextView = view.findViewById(R.id.emailWarningTextView); // Initialize the new TextView
+        emailLayout = view.findViewById(R.id.emailLayout); // Initialize TextInputLayout
 
         // Populate fields with current data from arguments
         if (getArguments() != null) {
@@ -73,6 +77,21 @@ public class EditProfileBottomSheet extends BottomSheetDialogFragment {
             lastNameField.setText(getArguments().getString("lastName"));
             usernameField.setText(getArguments().getString("username"));
             emailField.setText(getArguments().getString("email"));
+
+            // --- Make Email Field Read-Only and show message ---
+            emailField.setFocusable(false); // Prevents direct focus
+            emailField.setFocusableInTouchMode(false); // Prevents focus on touch
+            emailField.setCursorVisible(false); // Hides the cursor
+            emailField.setKeyListener(null); // Prevents input from soft keyboard
+            emailField.setBackground(null); // Optional: Remove background to make it look less like an input field
+
+            // Optional: Change text color to indicate it's not editable
+            emailField.setTextColor(getResources().getColor(R.color.text_secondary, null));
+
+            // Show the warning message
+            emailWarningTextView.setVisibility(View.VISIBLE);
+            // If you want to disable the input layout completely, uncomment next line:
+            // emailLayout.setEnabled(false); // Disables the whole TextInputLayout
         }
 
         cancelButton.setOnClickListener(new View.OnClickListener() {
@@ -88,13 +107,13 @@ public class EditProfileBottomSheet extends BottomSheetDialogFragment {
                 String newFirstName = firstNameField.getText().toString().trim();
                 String newLastName = lastNameField.getText().toString().trim();
                 String newUsername = usernameField.getText().toString().trim();
-                String newEmail = emailField.getText().toString().trim();
+                // No need to get newEmail as it's not editable
 
-                if (newFirstName.isEmpty() || newLastName.isEmpty() || newUsername.isEmpty() || newEmail.isEmpty()) {
+                if (newFirstName.isEmpty() || newLastName.isEmpty() || newUsername.isEmpty()) {
                     Toast.makeText(getContext(), "Please fill all fields", Toast.LENGTH_SHORT).show();
                 } else {
                     if (listener != null) {
-                        listener.onProfileEdited(newFirstName, newLastName, newUsername, newEmail);
+                        listener.onProfileEdited(newFirstName, newLastName, newUsername); // Only pass editable fields
                     }
                     dismiss(); // Close the bottom sheet
                 }
