@@ -21,6 +21,7 @@ import com.example.currents.R;
 
 import com.google.android.gms.tasks.OnCompleteListener;
 import com.google.android.gms.tasks.Task;
+import com.google.android.material.dialog.MaterialAlertDialogBuilder;
 import com.google.android.material.button.MaterialButton;
 import com.google.android.material.textfield.TextInputEditText;
 import com.google.android.material.textfield.TextInputLayout;
@@ -310,7 +311,7 @@ public class LoginActivity extends AppCompatActivity {
     }
 
     private void showUnregisteredUserDialog() {
-        new AlertDialog.Builder(this)
+        new MaterialAlertDialogBuilder(this)
             .setTitle(R.string.user_not_registered_title)
             .setMessage(R.string.user_not_registered_message)
             .setPositiveButton(R.string.sign_up, (dialog, which) -> {

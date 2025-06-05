@@ -23,6 +23,7 @@ import androidx.cardview.widget.CardView;
 import com.example.currents.R;
 import com.example.currents.ui.bottomsheet.ChangePasswordBottomSheet;
 import com.example.currents.ui.bottomsheet.EditProfileBottomSheet;
+import com.google.android.material.dialog.MaterialAlertDialogBuilder;
 import com.google.android.gms.tasks.OnCompleteListener;
 import com.google.android.gms.tasks.Task;
 import com.google.firebase.auth.FirebaseAuth;
@@ -259,15 +260,13 @@ public class ProfileActivity extends AppCompatActivity
     }
 
     private void showDeleteAccountConfirmationDialog() {
-        new AlertDialog.Builder(this)
+        new MaterialAlertDialogBuilder(this)
                 .setTitle(R.string.delete_account_title)
                 .setMessage(R.string.delete_account_message)
                 .setPositiveButton(R.string.yes, (dialog, which) -> {
-                    // User confirmed, proceed with account deletion
                     deleteUser();
                 })
                 .setNegativeButton(R.string.no, (dialog, which) -> {
-                    // User cancelled, dismiss the dialog
                     dialog.dismiss();
                 })
                 .show();
