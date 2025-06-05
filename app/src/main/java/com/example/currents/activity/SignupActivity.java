@@ -70,8 +70,6 @@ public class SignupActivity extends AppCompatActivity {
     private static final String KEY_FIRST_NAME = "first_name";
     private static final String KEY_LAST_NAME = "last_name";
     private static final String KEY_EMAIL = "email";
-    private static final String KEY_LAST_PASSWORD_CHANGE = "last_password_change"; // Stored as long (milliseconds)
-
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -372,8 +370,6 @@ public class SignupActivity extends AppCompatActivity {
         userData.put("email", email);
         userData.put("createdAt", FieldValue.serverTimestamp());
         userData.put("updatedAt", FieldValue.serverTimestamp());
-        userData.put("lastLogin", FieldValue.serverTimestamp()); // Initial login
-        userData.put("lastPasswordChange", FieldValue.serverTimestamp()); // Initial password change
 
         // Store data in Firestore using the user's UID as the document ID
         db.collection("users").document(user.getUid())
@@ -381,26 +377,26 @@ public class SignupActivity extends AppCompatActivity {
                 .addOnSuccessListener(aVoid -> {
                     Log.d(TAG, "User data successfully saved to Firestore for UID: " + user.getUid());
 
-                    // --- Store user data in SharedPreferences ---
-                    SharedPreferences sharedPref = getSharedPreferences(PREF_NAME, Context.MODE_PRIVATE);
-                    SharedPreferences.Editor editor = sharedPref.edit();
-
-                    editor.putString(KEY_USER_UID, user.getUid()); // Document ID
-                    editor.putString(KEY_FIRST_NAME, firstName);
-                    editor.putString(KEY_LAST_NAME, lastName);
-                    editor.putString(KEY_USERNAME, username);
-                    editor.putString(KEY_EMAIL, email);
-                    // Store the current time for lastPasswordChange in SharedPreferences as long
-                    editor.putLong(KEY_LAST_PASSWORD_CHANGE, currentTimestampMillis);
-
-                    editor.apply(); // Apply changes asynchronously
-
-                    // Only show welcome message in Toast, no email sending
-                    Toast.makeText(SignupActivity.this, "Welcome to Currents! Your account has been created.",
-                            Toast.LENGTH_LONG).show();
-
-                    // --- Navigate to HomeActivity directly ---
-                    navigateToHome();
+                    // --- Send Email Verification ---
+                    user.sendEmailVerification()
+                            .addOnCompleteListener(new OnCompleteListener<Void>() {
+                                @Override
+                                public void onComplete(@NonNull Task<Void> task) {
+                                    if (task.isSuccessful()) {
+                                        Log.d(TAG, "Verification email sent to " + user.getEmail());
+                                        Toast.makeText(SignupActivity.this,
+                                                "Account created! Please check your email for a verification link.",
+                                                Toast.LENGTH_LONG).show();
+                                    } else {
+                                        Log.e(TAG, "Failed to send verification email.", task.getException());
+                                        Toast.makeText(SignupActivity.this,
+                                                "Account created, but failed to send verification email. Please check your spam folder or try verifying later.",
+                                                Toast.LENGTH_LONG).show();
+                                    }
+                                    // --- Navigate to HomeActivity directly after email verification attempt ---
+                                    navigateToHome();
+                                }
+                            });
                 })
                 .addOnFailureListener(e -> {
                     // If Firestore save fails, delete the user from Firebase Auth to avoid inconsistencies
@@ -444,6 +440,34 @@ public class SignupActivity extends AppCompatActivity {
      * This will be the main screen after successful signup.
      */
     private void navigateToHome() {
+        // --- Store user data in SharedPreferences before navigating ---
+        // This part needs to be done here, as saveUserDataToFirestore's success listener
+        // now contains the email verification step.
+        // We get the data directly from the input fields since we know it's valid at this point.
+        String firstName = firstNameEditText.getText().toString().trim();
+        String lastName = lastNameEditText.getText().toString().trim();
+        String username = userNameEditText.getText().toString().trim();
+        String email = emailEditText.getText().toString().trim();
+        FirebaseUser user = mAuth.getCurrentUser(); // Get current user (should not be null here)
+
+        if (user != null) {
+            SharedPreferences sharedPref = getSharedPreferences(PREF_NAME, Context.MODE_PRIVATE);
+            SharedPreferences.Editor editor = sharedPref.edit();
+
+            editor.putString(KEY_USER_UID, user.getUid());
+            editor.putString(KEY_FIRST_NAME, firstName);
+            editor.putString(KEY_LAST_NAME, lastName);
+            editor.putString(KEY_USERNAME, username);
+            editor.putString(KEY_EMAIL, email);
+
+            editor.apply(); // Apply changes asynchronously
+            Log.d(TAG, "User data saved to SharedPreferences before navigating to Home.");
+        } else {
+            Log.e(TAG, "User is null when trying to save to SharedPreferences in navigateToHome.");
+            Toast.makeText(this, "Internal error: Could not save local data.", Toast.LENGTH_SHORT).show();
+        }
+
+        // --- Actual Navigation ---
         Intent intent = new Intent(SignupActivity.this, HomeActivity.class);
         // Clear back stack to prevent going back to signup/login after successful registration
         intent.setFlags(Intent.FLAG_ACTIVITY_NEW_TASK | Intent.FLAG_ACTIVITY_CLEAR_TASK);
