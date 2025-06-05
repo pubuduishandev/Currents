@@ -16,24 +16,30 @@ import com.example.currents.R;
 import com.example.currents.adapter.NewsAdapter;
 import com.example.currents.model.NewsItem;
 import com.google.android.material.appbar.MaterialToolbar;
+import com.google.android.material.chip.Chip; // Import Chip
+import com.google.android.material.chip.ChipGroup; // Import ChipGroup
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Locale; // For toLowerCase() with Locale
 import java.util.stream.Collectors;
 
-public class SearchViewActivity extends AppCompatActivity { // Removed NewsAdapter.OnNewsClickListener from implements
+public class SearchViewActivity extends AppCompatActivity {
 
     private MaterialToolbar searchToolbar;
     private SearchView appCompatSearchView;
     private RecyclerView searchResultsRecyclerView;
     private NewsAdapter searchResultsAdapter;
 
-    private List<NewsItem> allAvailableNewsItems; // List to search from, passed by HomeActivity
+    private ChipGroup categoryChipGroup; // Declare ChipGroup
+    private String selectedCategoryFilter = ""; // To store the currently selected category
 
-    // Request code for starting this activity and getting a result back
+    private List<NewsItem> allAvailableNewsItems;
+    private List<NewsItem> currentFilteredNewsItems; // New list to hold items filtered by category
+
     public static final int SEARCH_REQUEST_CODE = 1;
-    public static final String EXTRA_ALL_NEWS_ITEMS = "extra_all_news_items"; // Key to receive all news
-    public static final String EXTRA_SELECTED_NEWS_ITEM = "extra_selected_news_item"; // Key to send back selected news
+    public static final String EXTRA_ALL_NEWS_ITEMS = "extra_all_news_items";
+    public static final String EXTRA_SELECTED_NEWS_ITEM = "extra_selected_news_item";
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -43,6 +49,7 @@ public class SearchViewActivity extends AppCompatActivity { // Removed NewsAdapt
         searchToolbar = findViewById(R.id.searchToolbar);
         appCompatSearchView = findViewById(R.id.appCompatSearchView);
         searchResultsRecyclerView = findViewById(R.id.searchResultsRecyclerView);
+        categoryChipGroup = findViewById(R.id.categoryChipGroup); // Initialize ChipGroup
 
         setSupportActionBar(searchToolbar);
         getSupportActionBar().setDisplayHomeAsUpEnabled(true);
@@ -52,27 +59,39 @@ public class SearchViewActivity extends AppCompatActivity { // Removed NewsAdapt
 
         searchResultsRecyclerView.setLayoutManager(new LinearLayoutManager(this));
 
-        // Retrieve the list of all news items from the Intent
-        // Use getSerializableExtra and cast it
         if (getIntent().hasExtra(EXTRA_ALL_NEWS_ITEMS)) {
             allAvailableNewsItems = (List<NewsItem>) getIntent().getSerializableExtra(EXTRA_ALL_NEWS_ITEMS);
+            // Initially, allAvailableNewsItems are also the current filtered items before any category/search filter
+            currentFilteredNewsItems = new ArrayList<>(allAvailableNewsItems);
         } else {
-            allAvailableNewsItems = new ArrayList<>(); // Fallback if no data received
+            allAvailableNewsItems = new ArrayList<>();
+            currentFilteredNewsItems = new ArrayList<>();
             Toast.makeText(this, "No news data available for search.", Toast.LENGTH_LONG).show();
         }
 
-        // Initialize adapter with an empty list initially, and a custom click listener for this activity
         searchResultsAdapter = new NewsAdapter(new ArrayList<>(), new NewsAdapter.OnNewsClickListener() {
             @Override
             public void onNewsClick(NewsItem newsItem) {
-                // When a search result is clicked, send it back to HomeActivity
                 Intent resultIntent = new Intent();
                 resultIntent.putExtra(EXTRA_SELECTED_NEWS_ITEM, newsItem);
                 setResult(RESULT_OK, resultIntent);
-                finish(); // Close SearchViewActivity
+                finish();
             }
         });
         searchResultsRecyclerView.setAdapter(searchResultsAdapter);
+
+        // Set up ChipGroup listener
+        setupChipGroup();
+
+        // Initial search to display all news if no query, or apply existing query if activity recreated
+        // It's better to call performSearch with an empty string initially to show all results
+        // or re-run the last query if that's your desired behavior.
+        // For now, let's assume an empty query shows nothing until typed.
+        // If you want to show all results initially, call performSearch(""); here.
+        // Or if you want to show results based on an initial selected category, call filterByCategory("initial_category");
+        // For simplicity, let's start with an empty list for search results.
+        // show all news initially based on current category selection (which is none by default)
+        performSearch(appCompatSearchView.getQuery().toString()); // Use the current query text (might be empty)
 
         appCompatSearchView.onActionViewExpanded();
         appCompatSearchView.requestFocusFromTouch();
@@ -95,10 +114,35 @@ public class SearchViewActivity extends AppCompatActivity { // Removed NewsAdapt
         });
 
         appCompatSearchView.setOnCloseListener(() -> {
-            searchResultsAdapter.setNewsList(new ArrayList<>());
+            // When search is cleared, clear category filter too, and update results
+            clearCategorySelection(); // Uncheck all chips
+            performSearch(""); // Show all results (or no results depending on your preference)
             return false;
         });
     }
+
+    private void setupChipGroup() {
+        categoryChipGroup.setOnCheckedStateChangeListener((group, checkedIds) -> {
+            if (checkedIds.isEmpty()) {
+                selectedCategoryFilter = ""; // No chip selected
+            } else {
+                Chip selectedChip = findViewById(checkedIds.get(0));
+                selectedCategoryFilter = selectedChip.getText().toString();
+            }
+            // Re-run the search with the updated category filter
+            performSearch(appCompatSearchView.getQuery().toString());
+        });
+
+        // If you want to uncheck all chips easily
+        // You might consider adding a "Clear Filter" chip or a button.
+        // For now, clearing the search query will also clear the category filter via onCloseListener.
+    }
+
+    private void clearCategorySelection() {
+        categoryChipGroup.clearCheck();
+        selectedCategoryFilter = "";
+    }
+
 
     private void performSearch(String query) {
         if (allAvailableNewsItems == null || allAvailableNewsItems.isEmpty()) {
@@ -106,29 +150,45 @@ public class SearchViewActivity extends AppCompatActivity { // Removed NewsAdapt
             return;
         }
 
-        if (query == null || query.trim().isEmpty()) {
-            searchResultsAdapter.setNewsList(new ArrayList<>()); // Clear results if query is empty
-            return;
+        // 1. Filter by category first (if a chip is selected)
+        List<NewsItem> categoryFilteredList;
+        if (!selectedCategoryFilter.isEmpty()) {
+            categoryFilteredList = allAvailableNewsItems.stream()
+                    .filter(news -> news.getCategory() != null &&
+                            news.getCategory().equalsIgnoreCase(selectedCategoryFilter))
+                    .collect(Collectors.toList());
+        } else {
+            // If no category is selected, start with all available items
+            categoryFilteredList = new ArrayList<>(allAvailableNewsItems);
         }
 
-        List<NewsItem> filteredList = allAvailableNewsItems.stream()
-                .filter(news -> news.getTitle().toLowerCase().contains(query.toLowerCase()) ||
-                        news.getContent().toLowerCase().contains(query.toLowerCase()) ||
-                        news.getCategory().toLowerCase().contains(query.toLowerCase()))
-                .collect(Collectors.toList());
+        // 2. Then, apply text search on the category-filtered list
+        List<NewsItem> finalFilteredList;
+        if (query == null || query.trim().isEmpty()) {
+            // If search query is empty, show all items from the category-filtered list
+            finalFilteredList = new ArrayList<>(categoryFilteredList);
+        } else {
+            String lowerCaseQuery = query.toLowerCase(Locale.getDefault());
+            finalFilteredList = categoryFilteredList.stream()
+                    .filter(news -> (news.getTitle() != null && news.getTitle().toLowerCase(Locale.getDefault()).contains(lowerCaseQuery)) ||
+                            (news.getContent() != null && news.getContent().toLowerCase(Locale.getDefault()).contains(lowerCaseQuery)) ||
+                            // Also search in category if it's not the primary filter
+                            (selectedCategoryFilter.isEmpty() && news.getCategory() != null && news.getCategory().toLowerCase(Locale.getDefault()).contains(lowerCaseQuery)))
+                    .collect(Collectors.toList());
+        }
 
-        searchResultsAdapter.setNewsList(filteredList);
+        searchResultsAdapter.setNewsList(finalFilteredList);
 
-        if (filteredList.isEmpty() && !query.trim().isEmpty()) {
-            // Optional: Provide feedback if no results
-            // Toast.makeText(this, "No results found for \"" + query + "\"", Toast.LENGTH_SHORT).show();
+        if (finalFilteredList.isEmpty() && (!query.trim().isEmpty() || !selectedCategoryFilter.isEmpty())) {
+            // Optional: Provide feedback if no results after applying filters
+            // Toast.makeText(this, "No results found for your filters.", Toast.LENGTH_SHORT).show();
         }
     }
 
     @Override
     public void onBackPressed() {
         hideKeyboard(appCompatSearchView);
-        setResult(RESULT_CANCELED); // Set result to CANCELED if user just backs out without selecting
+        setResult(RESULT_CANCELED);
         super.onBackPressed();
     }
 
