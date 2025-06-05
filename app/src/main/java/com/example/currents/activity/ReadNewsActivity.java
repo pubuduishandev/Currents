@@ -22,16 +22,21 @@ import com.google.android.gms.tasks.OnCompleteListener;
 import com.google.android.gms.tasks.OnFailureListener;
 import com.google.android.gms.tasks.OnSuccessListener;
 import com.google.android.gms.tasks.Task;
+import com.google.firebase.Timestamp; // Import for Timestamp
 import com.google.firebase.auth.FirebaseAuth;
 import com.google.firebase.auth.FirebaseUser;
 import com.google.firebase.firestore.CollectionReference;
 import com.google.firebase.firestore.DocumentReference;
 import com.google.firebase.firestore.DocumentSnapshot;
-import com.google.firebase.firestore.FieldValue; // Import for server timestamp
+import com.google.firebase.firestore.EventListener; // Import for EventListener
+import com.google.firebase.firestore.FieldValue;
 import com.google.firebase.firestore.FirebaseFirestore;
-import com.google.firebase.firestore.QueryDocumentSnapshot; // For querying
-import com.google.firebase.firestore.QuerySnapshot; // For querying
+import com.google.firebase.firestore.FirebaseFirestoreException;
+import com.google.firebase.firestore.ListenerRegistration; // Import for ListenerRegistration
+import com.google.firebase.firestore.QueryDocumentSnapshot;
+import com.google.firebase.firestore.QuerySnapshot;
 
+import java.text.SimpleDateFormat; // Import for SimpleDateFormat
 import java.util.HashMap;
 import java.util.Locale;
 import java.util.Map;
@@ -58,14 +63,17 @@ public class ReadNewsActivity extends AppCompatActivity {
     private String currentNewsTitle;
     private String currentNewsDate;
     private int currentNewsImageResId;
-    private String currentArticleId; // New: To store the article's Firestore document ID
+    private String currentArticleId;
 
     // Firebase
     private FirebaseFirestore db;
     private FirebaseAuth mAuth;
     private CollectionReference bookmarksRef;
-    private String currentUserId; // To store the logged-in user's ID
-    private String foundBookmarkDocId = null; // To store the specific bookmark document ID if found
+    private String currentUserId;
+    private String foundBookmarkDocId = null;
+
+    // Listener registration for the article document
+    private ListenerRegistration articleListenerRegistration;
 
     // SharedPreferences name and key for User UID (MUST MATCH LoginActivity/ProfileActivity)
     private static final String PREF_NAME = "CurrentUserPrefs";
@@ -98,6 +106,7 @@ public class ReadNewsActivity extends AppCompatActivity {
             currentNewsContent = intent.getStringExtra(HomeActivity.EXTRA_NEWS_CONTENT);
             currentArticleId = intent.getStringExtra(HomeActivity.EXTRA_ARTICLE_ID); // Retrieve the article ID
 
+            // Set initial data from intent (will be overwritten by real-time updates)
             if (currentNewsTitle != null) {
                 readNewsTitleTextView.setText(currentNewsTitle);
             }
@@ -116,7 +125,7 @@ public class ReadNewsActivity extends AppCompatActivity {
 
         // Initialize Firebase
         db = FirebaseFirestore.getInstance();
-        mAuth = FirebaseAuth.getInstance(); // Initialize FirebaseAuth
+        mAuth = FirebaseAuth.getInstance();
         bookmarksRef = db.collection("bookmarks");
 
         // Get current user ID (prioritize Firebase Auth, then SharedPreferences)
@@ -141,13 +150,94 @@ public class ReadNewsActivity extends AppCompatActivity {
             isBookmarked = false; // Default to not bookmarked if essential info is missing
             invalidateOptionsMenu(); // Update UI
             if (currentArticleId == null) {
-                Log.e(TAG, "currentArticleId is null. Cannot perform bookmark operations.");
+                Log.e(TAG, "currentArticleId is null. Cannot perform bookmark operations or listen for article changes.");
             }
         }
 
         // Initialize TextToSpeech engine
         initTextToSpeech();
     }
+
+    @Override
+    protected void onStart() {
+        super.onStart();
+        // Start real-time listener for the specific article when the activity becomes visible
+        startArticleRealtimeListener();
+    }
+
+    @Override
+    protected void onStop() {
+        super.onStop();
+        // Remove real-time listener when the activity is no longer visible
+        stopArticleRealtimeListener();
+    }
+
+    private void startArticleRealtimeListener() {
+        if (currentArticleId == null || currentArticleId.isEmpty()) {
+            Log.e(TAG, "Cannot start article real-time listener: currentArticleId is null or empty.");
+            return;
+        }
+
+        DocumentReference articleDocRef = db.collection("articles").document(currentArticleId);
+
+        articleListenerRegistration = articleDocRef.addSnapshotListener(new EventListener<DocumentSnapshot>() {
+            @Override
+            public void onEvent(@androidx.annotation.Nullable DocumentSnapshot snapshot,
+                                @androidx.annotation.Nullable FirebaseFirestoreException e) {
+                if (e != null) {
+                    Log.w(TAG, "Listen failed for article: " + currentArticleId, e);
+                    Toast.makeText(ReadNewsActivity.this, "Failed to load article updates: " + e.getMessage(), Toast.LENGTH_LONG).show();
+                    return;
+                }
+
+                if (snapshot != null && snapshot.exists()) {
+                    Log.d(TAG, "Real-time update received for article: " + currentArticleId);
+                    // Update UI with the latest data
+                    currentNewsTitle = snapshot.getString("title");
+                    currentNewsContent = snapshot.getString("content");
+                    Timestamp timestamp = snapshot.getTimestamp("createdAt");
+                    String imageName = snapshot.getString("imageName");
+
+                    SimpleDateFormat sdf = new SimpleDateFormat("yyyy-MM-dd", Locale.getDefault());
+                    currentNewsDate = (timestamp != null) ? sdf.format(timestamp.toDate()) : "Unknown Date";
+
+                    // Resolve image resource ID
+                    int newImageResId = getResources().getIdentifier(imageName != null ? imageName : "news_placeholder", "drawable", getPackageName());
+                    if (newImageResId == 0) {
+                        newImageResId = R.drawable.news_placeholder;
+                    }
+                    currentNewsImageResId = newImageResId;
+
+                    // Update the TextViews and ImageView
+                    readNewsTitleTextView.setText(currentNewsTitle != null ? currentNewsTitle : "N/A");
+                    readNewsContentTextView.setText(currentNewsContent != null ? currentNewsContent : "No content available.");
+                    readNewsPostedDateTextView.setText(currentNewsDate);
+                    readNewsImageView.setImageResource(currentNewsImageResId);
+
+                    // If TTS is speaking, stop it and restart with new content (optional, or just update content)
+                    if (isReadingAloud && textToSpeech.isSpeaking()) {
+                        stopReadingAloud();
+                        // You could automatically restart here: startReadingAloud();
+                    }
+
+                } else {
+                    Log.d(TAG, "Article " + currentArticleId + " no longer exists or is empty.");
+                    // Handle case where the article might have been deleted from Firestore
+                    Toast.makeText(ReadNewsActivity.this, "This article is no longer available.", Toast.LENGTH_LONG).show();
+                    finish(); // Close the activity as content is gone
+                }
+            }
+        });
+    }
+
+    private void stopArticleRealtimeListener() {
+        if (articleListenerRegistration != null) {
+            articleListenerRegistration.remove();
+            articleListenerRegistration = null;
+            Log.d(TAG, "Stopped article real-time listener for: " + currentArticleId);
+        }
+    }
+
 
     private void checkBookmarkStatus() {
         if (currentUserId == null || currentArticleId == null || currentArticleId.isEmpty()) {
@@ -159,33 +249,30 @@ public class ReadNewsActivity extends AppCompatActivity {
         }
 
         bookmarksRef.whereEqualTo("userId", currentUserId)
-                .whereEqualTo("articleId", currentArticleId) // Query by article ID
+                .whereEqualTo("articleId", currentArticleId)
                 .get()
                 .addOnCompleteListener(new OnCompleteListener<QuerySnapshot>() {
                     @Override
                     public void onComplete(@NonNull Task<QuerySnapshot> task) {
                         if (task.isSuccessful()) {
                             if (!task.getResult().isEmpty()) {
-                                // Found a bookmark for this user and article
                                 for (QueryDocumentSnapshot document : task.getResult()) {
-                                    foundBookmarkDocId = document.getId(); // Store the actual document ID
+                                    foundBookmarkDocId = document.getId();
                                     isBookmarked = true;
                                     Log.d(TAG, "News is bookmarked. Bookmark Doc ID: " + foundBookmarkDocId);
-                                    break; // Assuming only one bookmark per user per article
+                                    break;
                                 }
                             } else {
                                 isBookmarked = false;
                                 foundBookmarkDocId = null;
                                 Log.d(TAG, "News is NOT bookmarked.");
                             }
-                            // Update the UI after checking bookmark status
-                            invalidateOptionsMenu(); // Recreate the menu to update the icon
+                            invalidateOptionsMenu();
                         } else {
                             Log.e(TAG, "Error getting bookmark documents: ", task.getException());
-                            // Default to not bookmarked on error
                             isBookmarked = false;
                             foundBookmarkDocId = null;
-                            invalidateOptionsMenu(); // Recreate the menu
+                            invalidateOptionsMenu();
                         }
                     }
                 });
@@ -206,14 +293,13 @@ public class ReadNewsActivity extends AppCompatActivity {
         }
 
         if (isBookmarked && foundBookmarkDocId != null) {
-            // Remove bookmark using the stored document ID
             bookmarksRef.document(foundBookmarkDocId)
                     .delete()
                     .addOnSuccessListener(new OnSuccessListener<Void>() {
                         @Override
                         public void onSuccess(Void aVoid) {
                             isBookmarked = false;
-                            foundBookmarkDocId = null; // Clear the stored ID
+                            foundBookmarkDocId = null;
                             updateBookmarkIcon();
                             Toast.makeText(ReadNewsActivity.this, "Bookmark removed", Toast.LENGTH_SHORT).show();
                             Log.d(TAG, "Bookmark successfully deleted for article: " + currentArticleId);
@@ -227,18 +313,17 @@ public class ReadNewsActivity extends AppCompatActivity {
                         }
                     });
         } else {
-            // Add bookmark
             Map<String, Object> bookmark = new HashMap<>();
             bookmark.put("userId", currentUserId);
-            bookmark.put("articleId", currentArticleId); // Use the retrieved articleId
-            bookmark.put("createdAt", FieldValue.serverTimestamp()); // Server timestamp
+            bookmark.put("articleId", currentArticleId);
+            bookmark.put("createdAt", FieldValue.serverTimestamp());
 
-            bookmarksRef.add(bookmark) // Use .add() for auto-generated document ID (bookmarkId)
+            bookmarksRef.add(bookmark)
                     .addOnSuccessListener(new OnSuccessListener<DocumentReference>() {
                         @Override
                         public void onSuccess(DocumentReference documentReference) {
                             isBookmarked = true;
-                            foundBookmarkDocId = documentReference.getId(); // Store the newly generated bookmarkId
+                            foundBookmarkDocId = documentReference.getId();
                             updateBookmarkIcon();
                             Toast.makeText(ReadNewsActivity.this, "Bookmark added", Toast.LENGTH_SHORT).show();
                             Log.d(TAG, "Bookmark successfully added with ID: " + foundBookmarkDocId);
@@ -261,7 +346,6 @@ public class ReadNewsActivity extends AppCompatActivity {
             } else {
                 bookmarkMenuItem.setIcon(R.drawable.bookmark);
             }
-            // Disable bookmarking if no user is logged in or article ID is missing
             bookmarkMenuItem.setEnabled(currentUserId != null && currentArticleId != null);
         }
     }
@@ -400,6 +484,7 @@ public class ReadNewsActivity extends AppCompatActivity {
             textToSpeech.shutdown();
             Log.d(TAG, "TextToSpeech shut down.");
         }
+        stopArticleRealtimeListener(); // Ensure listener is stopped on destroy as well
         super.onDestroy();
     }
 }

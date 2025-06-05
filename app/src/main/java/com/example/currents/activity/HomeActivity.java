@@ -32,6 +32,7 @@ import com.google.android.gms.tasks.OnCompleteListener;
 import com.google.android.gms.tasks.Task;
 import com.google.firebase.Timestamp;
 import com.google.firebase.firestore.FieldPath; // Added for whereIn documentId query
+import com.google.firebase.firestore.ListenerRegistration; // Import for ListenerRegistration
 
 import java.text.SimpleDateFormat;
 import java.util.ArrayList;
@@ -69,6 +70,9 @@ public class HomeActivity extends AppCompatActivity implements NewsAdapter.OnNew
     // SharedPreferences name and key for User UID (MUST MATCH LoginActivity/ProfileActivity)
     private static final String PREF_NAME = "CurrentUserPrefs";
     private static final String KEY_USER_UID = "user_uid";
+
+    // Listener Registration for Firestore (for real-time updates)
+    private ListenerRegistration newsListenerRegistration;
 
 
     @Override
@@ -116,7 +120,8 @@ public class HomeActivity extends AppCompatActivity implements NewsAdapter.OnNew
         verticalCardRecyclerView.setAdapter(verticalNewsAdapter);
 
         // --- Fetch news items and bookmarks from Firestore ---
-        fetchNewsFromFirestore();       // Fetch all news
+        // Changed to use real-time listener
+        setupNewsRealtimeListener();
         fetchBookmarkedNewsFromFirestore(); // Fetch bookmarked news
 
         // --- SearchBar Click Listener (Now launches SearchViewActivity) ---
@@ -163,82 +168,61 @@ public class HomeActivity extends AppCompatActivity implements NewsAdapter.OnNew
     }
 
     /**
-     * Fetches all news articles from the "articles" collection in Firestore.
+     * Sets up a real-time listener for the "articles" collection in Firestore.
+     * This method will automatically update `allNewsItems` when changes occur.
      */
-    private void fetchNewsFromFirestore() {
-        db.collection("articles")
-                .get()
-                .addOnCompleteListener(new OnCompleteListener<QuerySnapshot>() {
-                    @Override
-                    public void onComplete(@NonNull Task<QuerySnapshot> task) {
-                        if (task.isSuccessful()) {
-                            List<NewsItem> fetchedNews = new ArrayList<>();
-                            SimpleDateFormat sdf = new SimpleDateFormat("yyyy-MM-dd", Locale.getDefault());
+    private void setupNewsRealtimeListener() {
+        if (newsListenerRegistration != null) {
+            newsListenerRegistration.remove(); // Remove previous listener if it exists
+        }
 
-                            for (QueryDocumentSnapshot document : task.getResult()) {
-                                try {
-                                    String title = document.getString("title");
-                                    String category = document.getString("category");
-                                    String content = document.getString("content");
-                                    Timestamp timestamp = document.getTimestamp("createdAt");
-                                    String postedDate = (timestamp != null) ? sdf.format(timestamp.toDate()) : "Unknown Date";
+        newsListenerRegistration = db.collection("articles")
+                .addSnapshotListener((snapshots, e) -> {
+                    if (e != null) {
+                        Log.w(TAG, "Listen failed.", e);
+                        Toast.makeText(HomeActivity.this, "Failed to load news updates.", Toast.LENGTH_LONG).show();
+                        return;
+                    }
 
-                                    String imageName = document.getString("imageName");
-                                    int imageResId = getResources().getIdentifier(imageName != null ? imageName : "news_placeholder", "drawable", getPackageName());
-                                    if (imageResId == 0) {
-                                        imageResId = R.drawable.news_placeholder;
-                                    }
+                    if (snapshots != null) {
+                        List<NewsItem> fetchedNews = new ArrayList<>();
+                        SimpleDateFormat sdf = new SimpleDateFormat("yyyy-MM-dd", Locale.getDefault());
 
-                                    // Add the document ID to the NewsItem for later use (e.g., bookmarking)
-                                    // You might need to modify your NewsItem class to include an articleId
-                                    // For now, I'm passing it as the first argument, assuming your NewsItem constructor
-                                    // takes an ID or you'll modify it to store it.
-                                    // If NewsItem doesn't store ID, you'll need to adjust or create a separate map.
-                                    // Assuming NewsItem constructor is (title, postedDate, imageResId, category, content)
-                                    // A better approach would be to pass it a custom object or add an ID field to NewsItem.
-                                    // For this example, I will assume NewsItem constructor doesn't change and ID is handled elsewhere.
-                                    // However, for bookmarking, the articleId is CRUCIAL.
-                                    // LET'S ADD ARTICLE ID TO NEWSITEM MODEL for proper bookmarking.
-                                    // Temporarily assuming NewsItem now has a constructor with (id, title, date, image, category, content)
-                                    // OR, we must pass the article ID separately if not stored in NewsItem.
-                                    // For now, I'll pass the document.getId() as a placeholder if NewsItem doesn't have an ID field.
-                                    // It's crucial for the bookmarking logic to correctly identify which article to bookmark/unbookmark.
+                        for (QueryDocumentSnapshot document : snapshots) {
+                            try {
+                                String articleId = document.getId();
+                                String title = document.getString("title");
+                                String category = document.getString("category");
+                                String content = document.getString("content");
+                                Timestamp timestamp = document.getTimestamp("createdAt");
+                                String postedDate = (timestamp != null) ? sdf.format(timestamp.toDate()) : "Unknown Date";
 
-                                    // **** IMPORTANT: You should add an 'articleId' field to your NewsItem model class.
-                                    // public class NewsItem implements Serializable { private String id; ... public NewsItem(String id, String title, ...) }
-                                    // And update its constructor.
-                                    // For this code, I'll *assume* NewsItem has a String id field and its constructor is updated.
-                                    // Or, if not, you'll need to store articleId in a separate data structure.
-                                    // I'll proceed with the assumption that NewsItem has an `id` field.
-                                    // If not, you'll get a compile error, and you'll need to add it.
-                                    String articleId = document.getId(); // Get the Firestore document ID
-
-                                    if (title != null && category != null && content != null) {
-                                        fetchedNews.add(new NewsItem(articleId, title, postedDate, imageResId, category, content));
-                                    } else {
-                                        Log.w(TAG, "Skipping document with missing fields: " + document.getId());
-                                    }
-                                } catch (Exception e) {
-                                    Log.e(TAG, "Error parsing document " + document.getId() + ": " + e.getMessage(), e);
+                                String imageName = document.getString("imageName");
+                                int imageResId = getResources().getIdentifier(imageName != null ? imageName : "news_placeholder", "drawable", getPackageName());
+                                if (imageResId == 0) {
+                                    imageResId = R.drawable.news_placeholder;
                                 }
+
+                                if (title != null && category != null && content != null) {
+                                    fetchedNews.add(new NewsItem(articleId, title, postedDate, imageResId, category, content));
+                                } else {
+                                    Log.w(TAG, "Skipping document with missing fields: " + document.getId());
+                                }
+                            } catch (Exception ex) {
+                                Log.e(TAG, "Error parsing document " + document.getId() + ": " + ex.getMessage(), ex);
                             }
-                            allNewsItems.clear();
-                            allNewsItems.addAll(fetchedNews);
-
-                            Log.d(TAG, "Fetched " + allNewsItems.size() + " news items from Firestore.");
-
-                            // After fetching all news, apply initial filter based on selected bottom nav item
-                            filterNewsByCategory(getSelectedCategoryFromBottomNav());
-
-                        } else {
-                            Log.e(TAG, "Error getting all news documents: ", task.getException());
-                            Toast.makeText(HomeActivity.this, "Failed to load news. Please try again.", Toast.LENGTH_LONG).show();
-                            allNewsItems.clear();
-                            verticalNewsAdapter.setNewsList(new ArrayList<>());
                         }
+                        allNewsItems.clear();
+                        allNewsItems.addAll(fetchedNews);
+
+                        Log.d(TAG, "Realtime update: Fetched " + allNewsItems.size() + " news items from Firestore.");
+
+                        // After fetching all news, apply initial filter based on selected bottom nav item
+                        filterNewsByCategory(getSelectedCategoryFromBottomNav());
                     }
                 });
     }
+
 
     /**
      * Fetches bookmarked news articles for the current user from Firestore.
@@ -259,7 +243,7 @@ public class HomeActivity extends AppCompatActivity implements NewsAdapter.OnNew
             Log.e(TAG, "No current user ID found. Cannot fetch bookmarks.");
             bookmarkedNewsItems.clear();
             horizontalNewsAdapter.setNewsList(bookmarkedNewsItems); // Clear horizontal list
-            Toast.makeText(this, "Please log in to see your bookmarks.", Toast.LENGTH_SHORT).show();
+            // Toast.makeText(this, "Please log in to see your bookmarks.", Toast.LENGTH_SHORT).show(); // Avoid spamming if not logged in
             return;
         }
 
@@ -386,18 +370,27 @@ public class HomeActivity extends AppCompatActivity implements NewsAdapter.OnNew
         } else if (selectedId == R.id.navigation_events) {
             return getString(R.string.events);
         }
-        return getString(R.string.sports);
+        return getString(R.string.sports); // Default category
     }
-
-    // Removed getSavedNewsData() as horizontal RecyclerView now uses real bookmarks.
 
     @Override
     protected void onResume() {
         super.onResume();
         // Re-fetch bookmarks on resume to reflect changes (e.g., if user bookmarks/unbookmarks from ReadNewsActivity)
         fetchBookmarkedNewsFromFirestore();
-        // Optionally, re-fetch allNewsItems if they can change frequently
-        // fetchNewsFromFirestore();
+        // The main news feed (allNewsItems) is now handled by the real-time listener,
+        // so no need to call fetchNewsFromFirestore() here.
+    }
+
+    @Override
+    protected void onStop() {
+        super.onStop();
+        // Detach the Firestore listener to avoid memory leaks
+        if (newsListenerRegistration != null) {
+            newsListenerRegistration.remove();
+            newsListenerRegistration = null;
+            Log.d(TAG, "Firestore news listener removed.");
+        }
     }
 
     @Override
