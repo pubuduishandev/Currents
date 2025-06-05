@@ -5,16 +5,17 @@ import android.content.Context;
 import android.content.Intent;
 import android.content.SharedPreferences;
 import android.os.Bundle;
-import android.text.format.DateUtils; // Still needed for time formatting
-import android.util.Log;
 import android.view.Menu;
 import android.view.MenuInflater;
 import android.view.MenuItem;
+import androidx.annotation.NonNull;
 import android.view.View;
+import android.widget.Button;
 import android.widget.LinearLayout;
 import android.widget.TextView;
 import android.widget.Toast;
 
+import androidx.appcompat.app.AlertDialog;
 import androidx.appcompat.app.AppCompatActivity;
 import androidx.appcompat.widget.Toolbar;
 import androidx.cardview.widget.CardView;
@@ -22,6 +23,8 @@ import androidx.cardview.widget.CardView;
 import com.example.currents.R;
 import com.example.currents.ui.bottomsheet.ChangePasswordBottomSheet;
 import com.example.currents.ui.bottomsheet.EditProfileBottomSheet;
+import com.google.android.gms.tasks.OnCompleteListener;
+import com.google.android.gms.tasks.Task;
 import com.google.firebase.auth.FirebaseAuth;
 import com.google.firebase.auth.FirebaseUser;
 import com.google.firebase.firestore.FirebaseFirestore;
@@ -41,7 +44,9 @@ public class ProfileActivity extends AppCompatActivity
     private TextView emailValue;
     private TextView passwordValue;
     private CardView passwordCard;
-    private LinearLayout logoutCard; // Ensure this is initialized if it's in your layout
+    private LinearLayout logoutCard;
+
+    private Button deleteAccountButton;
 
     // SharedPreferences name and keys
     private static final String PREF_NAME = "CurrentUserPrefs";
@@ -59,7 +64,7 @@ public class ProfileActivity extends AppCompatActivity
     private String currentLastName;
     private String currentUsername;
     private String currentEmail;
-    private long currentUpdatedAtMillis; // NEW: to hold the updatedAt timestamp in millis
+    private long currentUpdatedAtMillis;
 
     // Not used in this version but kept for context:
     // private String pendingNewFirstName;
@@ -87,6 +92,7 @@ public class ProfileActivity extends AppCompatActivity
         emailValue = findViewById(R.id.emailValue);
         passwordValue = findViewById(R.id.passwordValue);
         passwordCard = findViewById(R.id.passwordCard);
+        deleteAccountButton = findViewById(R.id.deleteAccountButton);
 
         loadProfileDataFromSharedPreferences();
         updateProfileUI();
@@ -96,6 +102,14 @@ public class ProfileActivity extends AppCompatActivity
             public void onClick(View v) {
                 ChangePasswordBottomSheet bottomSheet = ChangePasswordBottomSheet.newInstance();
                 bottomSheet.show(getSupportFragmentManager(), bottomSheet.getTag());
+            }
+        });
+
+        // Set OnClickListener for the new delete account button
+        deleteAccountButton.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                showDeleteAccountConfirmationDialog();
             }
         });
 
@@ -135,7 +149,7 @@ public class ProfileActivity extends AppCompatActivity
         fullNameValue.setText(fullName);
         usernameValue.setText(currentUsername);
         emailValue.setText(currentEmail);
-        passwordValue.setText("Click to change password"); // Reset to fixed text
+        passwordValue.setText(R.string.password_change); // Reset to fixed text
     }
 
     @Override
@@ -186,7 +200,7 @@ public class ProfileActivity extends AppCompatActivity
     private void updateProfileInFirestore(String firstName, String lastName, String username, String email) {
         FirebaseUser user = FirebaseAuth.getInstance().getCurrentUser();
         if (user == null) {
-            Toast.makeText(this, "User not logged in.", Toast.LENGTH_SHORT).show();
+            Toast.makeText(this, R.string.error_user_not_found, Toast.LENGTH_SHORT).show();
             return;
         }
 
@@ -201,7 +215,7 @@ public class ProfileActivity extends AppCompatActivity
         db.collection("users").document(user.getUid())
                 .update(updates)
                 .addOnSuccessListener(aVoid -> {
-                    Toast.makeText(ProfileActivity.this, "Profile updated", Toast.LENGTH_SHORT).show();
+                    Toast.makeText(ProfileActivity.this, R.string.profile_updated_success, Toast.LENGTH_SHORT).show();
                     // Update local SharedPreferences and UI only after successful Firestore update
                     // NEW: Also update currentUpdatedAtMillis in shared prefs
                     saveProfileDataToSharedPreferences(firstName, lastName, username, email, Timestamp.now().toDate().getTime());
@@ -212,7 +226,7 @@ public class ProfileActivity extends AppCompatActivity
                     updateProfileUI(); // Refresh UI
                 })
                 .addOnFailureListener(e -> {
-                    Toast.makeText(ProfileActivity.this, "Error updating profile" + e.getMessage(), Toast.LENGTH_LONG).show();
+                    Toast.makeText(ProfileActivity.this, R.string.profile_update_error + e.getMessage(), Toast.LENGTH_LONG).show();
                 });
     }
 
@@ -236,11 +250,78 @@ public class ProfileActivity extends AppCompatActivity
         editor.clear();
         editor.apply();
 
-        Toast.makeText(ProfileActivity.this, "Logout successful", Toast.LENGTH_SHORT).show();
+        Toast.makeText(ProfileActivity.this, R.string.logout_success, Toast.LENGTH_SHORT).show();
 
         Intent intent = new Intent(ProfileActivity.this, LoginActivity.class);
         intent.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK | Intent.FLAG_ACTIVITY_CLEAR_TASK);
         startActivity(intent);
         finish();
+    }
+
+    private void showDeleteAccountConfirmationDialog() {
+        new AlertDialog.Builder(this)
+                .setTitle(R.string.delete_account_title)
+                .setMessage(R.string.delete_account_message)
+                .setPositiveButton(R.string.yes, (dialog, which) -> {
+                    // User confirmed, proceed with account deletion
+                    deleteUser();
+                })
+                .setNegativeButton(R.string.no, (dialog, which) -> {
+                    // User cancelled, dismiss the dialog
+                    dialog.dismiss();
+                })
+                .show();
+    }
+
+    public void deleteUser() {
+        FirebaseUser user = FirebaseAuth.getInstance().getCurrentUser();
+
+        if (user == null) {
+            Toast.makeText(this, "No user logged in to delete.", Toast.LENGTH_SHORT).show();
+            // Redirect to login if no user is found unexpectedly
+            Intent intent = new Intent(ProfileActivity.this, LoginActivity.class);
+            intent.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK | Intent.FLAG_ACTIVITY_CLEAR_TASK);
+            startActivity(intent);
+            finish();
+            return;
+        }
+
+        String userId = user.getUid();
+        FirebaseFirestore db = FirebaseFirestore.getInstance();
+
+        // Step 1: Delete user document from Firestore
+        db.collection("users").document(userId)
+            .delete()
+            .addOnSuccessListener(aVoid -> {
+                // Step 2: Delete user from Firebase Authentication
+                user.delete()
+                    .addOnCompleteListener(new OnCompleteListener<Void>() {
+                        @Override
+                        public void onComplete(@NonNull Task<Void> task) {
+                            if (task.isSuccessful()) {
+                                Toast.makeText(ProfileActivity.this, R.string.delete_account_success, Toast.LENGTH_LONG).show();
+
+                                // Step 3: Clear SharedPreferences
+                                SharedPreferences sharedPref = getSharedPreferences(PREF_NAME, Context.MODE_PRIVATE);
+                                SharedPreferences.Editor editor = sharedPref.edit();
+                                editor.clear();
+                                editor.apply();
+
+                                // Step 4: Navigate to LoginActivity
+                                Intent intent = new Intent(ProfileActivity.this, LoginActivity.class);
+                                intent.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK | Intent.FLAG_ACTIVITY_CLEAR_TASK);
+                                startActivity(intent);
+                                finish();
+
+                            } else {
+                                Toast.makeText(ProfileActivity.this, R.string.delete_account_error, Toast.LENGTH_LONG).show();
+                                signOutUser(); // Assuming you have this function
+                            }
+                        }
+                    });
+            })
+            .addOnFailureListener(e -> {
+                Toast.makeText(ProfileActivity.this, R.string.delete_account_error, Toast.LENGTH_LONG).show();
+            });
     }
 }

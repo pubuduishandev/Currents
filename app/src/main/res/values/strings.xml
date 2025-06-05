@@ -99,15 +99,29 @@
     <string name="cancel_button">Cancel</string>
     <string name="submit_button">OK</string>
     <string name="edit_profile_title">Edit Profile</string>
+    <string name="profile_updated_success">Profile updated successfully</string>
+    <string name="profile_update_error">Error updating profile</string>
+    <string name="error_user_not_found">User not found</string>
+    <string name="logout_success">Logout Successful</string>
+    <string name="password_change">Click to change password</string>
+    <string name="delete_account">Delete Account</string>
+    <string name="delete_account_title">Delete Account</string>
+    <string name="delete_account_message">Are you sure want to delete your account?</string>
+    <string name="yes">Yes</string>
+    <string name="no">No</string>
+    <string name="delete_account_success">Account deleted successfully</string>
+    <string name="delete_account_error">Error deleting account</string>
     <string name="feedback_title">Share your feedback</string>
     <string name="feedback_instructions">What is your opinion of Currents?</string>
     <string name="feedback_placeholder">Place your feedback here</string>
     <string name="feedback_submit_button">Send your feedback</string>
-
     <string name="menu_feedback">Feedback</string>
     <string name="menu_edit">Edit Profile</string>
     <string name="menu_bookmark">Bookmark</string>
     <string name="menu_sign_out">Sign out</string>
     <string name="menu_read_aloud">Read Aloud</string>
     <string name="menu_clear_bookmarks">Clear all Bookmarks</string>
+    <string name="user_not_registered_title">User Not Registered</string>
+    <string name="user_not_registered_message">This email address is not registered. Would you like to create a new account?</string>
+
 </resources>
