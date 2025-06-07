@@ -4,34 +4,55 @@ package com.example.currents.model;
 import java.io.Serializable;
 
 public class NewsItem implements Serializable {
-    private String id; // <--- ADD THIS FIELD
+    private String id;
     private String title;
     private String postedDate;
-    private int imageResId;
+    private int imageResId; // Kept for placeholder fallback
     private String category;
     private String content;
+    private String imageUrl; // NEW: Field to store image URL from Firebase Storage
 
-    // <--- UPDATE THIS CONSTRUCTOR
+    // UPDATED CONSTRUCTOR: Now includes imageUrl
+    public NewsItem(String id, String title, String postedDate, int imageResId, String category, String content, String imageUrl) {
+        this.id = id;
+        this.title = title;
+        this.postedDate = postedDate;
+        this.imageResId = imageResId; // For default/placeholder image
+        this.category = category;
+        this.content = content;
+        this.imageUrl = imageUrl; // Initialize imageUrl
+    }
+
+    // Existing constructor (optional, consider removing if all paths use the new one)
     public NewsItem(String id, String title, String postedDate, int imageResId, String category, String content) {
-        this.id = id; // <--- INITIALIZE THE NEW ID FIELD
+        this.id = id;
         this.title = title;
         this.postedDate = postedDate;
         this.imageResId = imageResId;
         this.category = category;
         this.content = content;
+        this.imageUrl = null; // Default to null if not provided
     }
 
-    // <--- ADD THIS GETTER METHOD
+    // ADDED GETTER FOR imageUrl
+    public String getImageUrl() {
+        return imageUrl;
+    }
+
+    // ADDED SETTER FOR imageUrl (optional)
+    public void setImageUrl(String imageUrl) {
+        this.imageUrl = imageUrl;
+    }
+
+    // Existing getters
     public String getId() {
         return id;
     }
 
-    // You might also want a setter if needed, but not strictly necessary for this use case
     public void setId(String id) {
         this.id = id;
     }
 
-    // Keep your existing getters for other fields
     public String getTitle() {
         return title;
     }
@@ -52,13 +73,13 @@ public class NewsItem implements Serializable {
         return content;
     }
 
-    // Optionally, override toString() for easier debugging
     @Override
     public String toString() {
         return "NewsItem{" +
                 "id='" + id + '\'' +
                 ", title='" + title + '\'' +
                 ", category='" + category + '\'' +
+                ", imageUrl='" + (imageUrl != null ? imageUrl : "N/A") + '\'' +
                 '}';
     }
 }

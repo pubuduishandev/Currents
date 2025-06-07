@@ -59,6 +59,7 @@ public class HomeActivity extends AppCompatActivity implements NewsAdapter.OnNew
     public static final String EXTRA_NEWS_TITLE = "extra_news_title";
     public static final String EXTRA_NEWS_DATE = "extra_news_date";
     public static final String EXTRA_NEWS_IMAGE_RES_ID = "extra_news_image_res_id";
+    public static final String EXTRA_NEWS_IMAGE_URL = "extra_news_image_url";
     public static final String EXTRA_NEWS_CONTENT = "extra_news_content";
 
     private ActivityResultLauncher<Intent> searchActivityLauncher;
@@ -196,15 +197,13 @@ public class HomeActivity extends AppCompatActivity implements NewsAdapter.OnNew
                                 String content = document.getString("content");
                                 Timestamp timestamp = document.getTimestamp("createdAt");
                                 String postedDate = (timestamp != null) ? sdf.format(timestamp.toDate()) : "Unknown Date";
+                                String imageUrl = document.getString("imageUrl");
 
-                                String imageName = document.getString("imageName");
-                                int imageResId = getResources().getIdentifier(imageName != null ? imageName : "news_placeholder", "drawable", getPackageName());
-                                if (imageResId == 0) {
-                                    imageResId = R.drawable.news_placeholder;
-                                }
+                                // Default placeholder if imageName or imageUrl is not present
+                                int imageResId = R.drawable.news_placeholder;
 
                                 if (title != null && category != null && content != null) {
-                                    fetchedNews.add(new NewsItem(articleId, title, postedDate, imageResId, category, content));
+                                    fetchedNews.add(new NewsItem(articleId, title, postedDate, imageResId, category, content, imageUrl));
                                 } else {
                                     Log.w(TAG, "Skipping document with missing fields: " + document.getId());
                                 }
@@ -295,15 +294,12 @@ public class HomeActivity extends AppCompatActivity implements NewsAdapter.OnNew
                                                 String content = document.getString("content");
                                                 Timestamp timestamp = document.getTimestamp("createdAt");
                                                 String postedDate = (timestamp != null) ? sdf.format(timestamp.toDate()) : "Unknown Date";
+                                                String imageUrl = document.getString("imageUrl"); // NEW: Get imageUrl
 
-                                                String imageName = document.getString("imageName");
-                                                int imageResId = getResources().getIdentifier(imageName != null ? imageName : "news_placeholder", "drawable", getPackageName());
-                                                if (imageResId == 0) {
-                                                    imageResId = R.drawable.news_placeholder;
-                                                }
+                                                int imageResId = R.drawable.news_placeholder; // Default placeholder
 
                                                 if (title != null && category != null && content != null) {
-                                                    fetchedBookmarkedNews.add(new NewsItem(articleId, title, postedDate, imageResId, category, content));
+                                                    fetchedBookmarkedNews.add(new NewsItem(articleId, title, postedDate, imageResId, category, content, imageUrl));
                                                 } else {
                                                     Log.w(TAG, "Skipping bookmarked article with missing fields: " + document.getId());
                                                 }
@@ -341,6 +337,7 @@ public class HomeActivity extends AppCompatActivity implements NewsAdapter.OnNew
         intent.putExtra(EXTRA_NEWS_TITLE, newsItem.getTitle());
         intent.putExtra(EXTRA_NEWS_DATE, newsItem.getPostedDate());
         intent.putExtra(EXTRA_NEWS_IMAGE_RES_ID, newsItem.getImageResId());
+        intent.putExtra(EXTRA_NEWS_IMAGE_URL, newsItem.getImageUrl());
         intent.putExtra(EXTRA_NEWS_CONTENT, newsItem.getContent());
         startActivity(intent);
     }

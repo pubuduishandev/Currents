@@ -17,26 +17,27 @@ import androidx.annotation.NonNull;
 import androidx.appcompat.app.AppCompatActivity;
 import androidx.appcompat.widget.Toolbar;
 
+import com.bumptech.glide.Glide; // Import Glide library
 import com.example.currents.R;
 import com.google.android.gms.tasks.OnCompleteListener;
 import com.google.android.gms.tasks.OnFailureListener;
 import com.google.android.gms.tasks.OnSuccessListener;
 import com.google.android.gms.tasks.Task;
-import com.google.firebase.Timestamp; // Import for Timestamp
+import com.google.firebase.Timestamp;
 import com.google.firebase.auth.FirebaseAuth;
 import com.google.firebase.auth.FirebaseUser;
 import com.google.firebase.firestore.CollectionReference;
 import com.google.firebase.firestore.DocumentReference;
 import com.google.firebase.firestore.DocumentSnapshot;
-import com.google.firebase.firestore.EventListener; // Import for EventListener
+import com.google.firebase.firestore.EventListener;
 import com.google.firebase.firestore.FieldValue;
 import com.google.firebase.firestore.FirebaseFirestore;
 import com.google.firebase.firestore.FirebaseFirestoreException;
-import com.google.firebase.firestore.ListenerRegistration; // Import for ListenerRegistration
+import com.google.firebase.firestore.ListenerRegistration;
 import com.google.firebase.firestore.QueryDocumentSnapshot;
 import com.google.firebase.firestore.QuerySnapshot;
 
-import java.text.SimpleDateFormat; // Import for SimpleDateFormat
+import java.text.SimpleDateFormat;
 import java.util.HashMap;
 import java.util.Locale;
 import java.util.Map;
@@ -62,7 +63,8 @@ public class ReadNewsActivity extends AppCompatActivity {
     private String currentNewsContent;
     private String currentNewsTitle;
     private String currentNewsDate;
-    private int currentNewsImageResId;
+    private int currentNewsImageResId; // Kept for local fallback, though imageUrl is preferred
+    private String currentNewsImageUrl; // NEW: To store the URL from Firebase Storage
     private String currentArticleId;
 
     // Firebase
@@ -72,10 +74,8 @@ public class ReadNewsActivity extends AppCompatActivity {
     private String currentUserId;
     private String foundBookmarkDocId = null;
 
-    // Listener registration for the article document
     private ListenerRegistration articleListenerRegistration;
 
-    // SharedPreferences name and key for User UID (MUST MATCH LoginActivity/ProfileActivity)
     private static final String PREF_NAME = "CurrentUserPrefs";
     private static final String KEY_USER_UID = "user_uid";
 
@@ -103,8 +103,9 @@ public class ReadNewsActivity extends AppCompatActivity {
             currentNewsTitle = intent.getStringExtra(HomeActivity.EXTRA_NEWS_TITLE);
             currentNewsDate = intent.getStringExtra(HomeActivity.EXTRA_NEWS_DATE);
             currentNewsImageResId = intent.getIntExtra(HomeActivity.EXTRA_NEWS_IMAGE_RES_ID, 0);
+            currentNewsImageUrl = intent.getStringExtra(HomeActivity.EXTRA_NEWS_IMAGE_URL); // NEW: Get image URL
             currentNewsContent = intent.getStringExtra(HomeActivity.EXTRA_NEWS_CONTENT);
-            currentArticleId = intent.getStringExtra(HomeActivity.EXTRA_ARTICLE_ID); // Retrieve the article ID
+            currentArticleId = intent.getStringExtra(HomeActivity.EXTRA_ARTICLE_ID);
 
             // Set initial data from intent (will be overwritten by real-time updates)
             if (currentNewsTitle != null) {
@@ -113,22 +114,20 @@ public class ReadNewsActivity extends AppCompatActivity {
             if (currentNewsDate != null) {
                 readNewsPostedDateTextView.setText(currentNewsDate);
             }
-            if (currentNewsImageResId != 0) {
-                readNewsImageView.setImageResource(currentNewsImageResId);
-            } else {
-                readNewsImageView.setImageResource(R.drawable.news_placeholder);
-            }
+
+            // --- Initial Image Loading with Glide (from Intent) ---
+            loadImageWithGlide(currentNewsImageUrl, currentNewsImageResId);
+            // --- End Initial Image Loading ---
+
             if (currentNewsContent != null) {
                 readNewsContentTextView.setText(currentNewsContent);
             }
         }
 
-        // Initialize Firebase
         db = FirebaseFirestore.getInstance();
         mAuth = FirebaseAuth.getInstance();
         bookmarksRef = db.collection("bookmarks");
 
-        // Get current user ID (prioritize Firebase Auth, then SharedPreferences)
         FirebaseUser currentUser = mAuth.getCurrentUser();
         if (currentUser != null) {
             currentUserId = currentUser.getUid();
@@ -143,32 +142,28 @@ public class ReadNewsActivity extends AppCompatActivity {
             }
         }
 
-        // Check bookmark status on activity creation, only if user and article ID are available
         if (currentUserId != null && currentArticleId != null) {
             checkBookmarkStatus();
         } else {
-            isBookmarked = false; // Default to not bookmarked if essential info is missing
-            invalidateOptionsMenu(); // Update UI
+            isBookmarked = false;
+            invalidateOptionsMenu();
             if (currentArticleId == null) {
                 Log.e(TAG, "currentArticleId is null. Cannot perform bookmark operations or listen for article changes.");
             }
         }
 
-        // Initialize TextToSpeech engine
         initTextToSpeech();
     }
 
     @Override
     protected void onStart() {
         super.onStart();
-        // Start real-time listener for the specific article when the activity becomes visible
         startArticleRealtimeListener();
     }
 
     @Override
     protected void onStop() {
         super.onStop();
-        // Remove real-time listener when the activity is no longer visible
         stopArticleRealtimeListener();
     }
 
@@ -192,39 +187,35 @@ public class ReadNewsActivity extends AppCompatActivity {
 
                 if (snapshot != null && snapshot.exists()) {
                     Log.d(TAG, "Real-time update received for article: " + currentArticleId);
-                    // Update UI with the latest data
                     currentNewsTitle = snapshot.getString("title");
                     currentNewsContent = snapshot.getString("content");
                     Timestamp timestamp = snapshot.getTimestamp("createdAt");
-                    String imageName = snapshot.getString("imageName");
+                    String imageUrlFromFirestore = snapshot.getString("imageUrl"); // NEW: Get imageUrl from Firestore
 
                     SimpleDateFormat sdf = new SimpleDateFormat("yyyy-MM-dd", Locale.getDefault());
                     currentNewsDate = (timestamp != null) ? sdf.format(timestamp.toDate()) : "Unknown Date";
 
-                    // Resolve image resource ID
-                    int newImageResId = getResources().getIdentifier(imageName != null ? imageName : "news_placeholder", "drawable", getPackageName());
-                    if (newImageResId == 0) {
-                        newImageResId = R.drawable.news_placeholder;
-                    }
-                    currentNewsImageResId = newImageResId;
+                    // Update currentNewsImageUrl
+                    currentNewsImageUrl = imageUrlFromFirestore;
 
                     // Update the TextViews and ImageView
                     readNewsTitleTextView.setText(currentNewsTitle != null ? currentNewsTitle : "N/A");
                     readNewsContentTextView.setText(currentNewsContent != null ? currentNewsContent : "No content available.");
                     readNewsPostedDateTextView.setText(currentNewsDate);
-                    readNewsImageView.setImageResource(currentNewsImageResId);
 
-                    // If TTS is speaking, stop it and restart with new content (optional, or just update content)
+                    // --- Image Loading with Glide (from Realtime Update) ---
+                    // Use the imageUrl from Firestore, with the local placeholder as fallback
+                    loadImageWithGlide(currentNewsImageUrl, R.drawable.news_placeholder);
+                    // --- End Image Loading ---
+
                     if (isReadingAloud && textToSpeech.isSpeaking()) {
                         stopReadingAloud();
-                        // You could automatically restart here: startReadingAloud();
                     }
 
                 } else {
                     Log.d(TAG, "Article " + currentArticleId + " no longer exists or is empty.");
-                    // Handle case where the article might have been deleted from Firestore
                     Toast.makeText(ReadNewsActivity.this, "This article is no longer available.", Toast.LENGTH_LONG).show();
-                    finish(); // Close the activity as content is gone
+                    finish();
                 }
             }
         });
@@ -235,6 +226,32 @@ public class ReadNewsActivity extends AppCompatActivity {
             articleListenerRegistration.remove();
             articleListenerRegistration = null;
             Log.d(TAG, "Stopped article real-time listener for: " + currentArticleId);
+        }
+    }
+
+    /**
+     * Helper method to load images using Glide.
+     * Prioritizes imageUrl; falls back to imageResId if imageUrl is null or empty.
+     */
+    private void loadImageWithGlide(String imageUrl, int localImageResId) {
+        if (imageUrl != null && !imageUrl.isEmpty()) {
+            Glide.with(this)
+                    .load(imageUrl)
+                    .placeholder(R.drawable.news_placeholder) // Show this while loading
+                    .error(R.drawable.news_placeholder) // Show this if loading fails
+                    .into(readNewsImageView);
+            Log.d(TAG, "Loading image from URL: " + imageUrl);
+        } else if (localImageResId != 0) {
+            // Fallback to local resource if imageUrl is absent
+            Glide.with(this)
+                    .load(localImageResId)
+                    .error(R.drawable.news_placeholder) // Fallback if local resource is invalid somehow
+                    .into(readNewsImageView);
+            Log.d(TAG, "Loading image from local resource ID: " + localImageResId);
+        } else {
+            // If neither is available, set the default placeholder
+            readNewsImageView.setImageResource(R.drawable.news_placeholder);
+            Log.d(TAG, "No image URL or local resource ID, showing default placeholder.");
         }
     }
 
@@ -484,7 +501,7 @@ public class ReadNewsActivity extends AppCompatActivity {
             textToSpeech.shutdown();
             Log.d(TAG, "TextToSpeech shut down.");
         }
-        stopArticleRealtimeListener(); // Ensure listener is stopped on destroy as well
+        stopArticleRealtimeListener();
         super.onDestroy();
     }
 }

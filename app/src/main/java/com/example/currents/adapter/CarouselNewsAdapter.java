@@ -1,4 +1,3 @@
-// com.example.currents.adapter/CarouselNewsAdapter.java
 package com.example.currents.adapter;
 
 import android.view.LayoutInflater;
@@ -10,6 +9,7 @@ import android.widget.TextView;
 import androidx.annotation.NonNull;
 import androidx.recyclerview.widget.RecyclerView;
 
+import com.bumptech.glide.Glide; // Import Glide
 import com.example.currents.R;
 import com.example.currents.model.NewsItem;
 
@@ -18,7 +18,7 @@ import java.util.List;
 public class CarouselNewsAdapter extends RecyclerView.Adapter<CarouselNewsAdapter.CarouselNewsViewHolder> {
 
     private List<NewsItem> newsList;
-    private NewsAdapter.OnNewsClickListener listener; // Reusing the same click listener interface
+    private NewsAdapter.OnNewsClickListener listener;
 
     public CarouselNewsAdapter(List<NewsItem> newsList, NewsAdapter.OnNewsClickListener listener) {
         this.newsList = newsList;
@@ -33,7 +33,6 @@ public class CarouselNewsAdapter extends RecyclerView.Adapter<CarouselNewsAdapte
     @NonNull
     @Override
     public CarouselNewsViewHolder onCreateViewHolder(@NonNull ViewGroup parent, int viewType) {
-        // Inflate the new layout for carousel items
         View view = LayoutInflater.from(parent.getContext()).inflate(R.layout.item_carousel_news_card, parent, false);
         return new CarouselNewsViewHolder(view);
     }
@@ -43,7 +42,19 @@ public class CarouselNewsAdapter extends RecyclerView.Adapter<CarouselNewsAdapte
         NewsItem newsItem = newsList.get(position);
         holder.newsTitleTextView.setText(newsItem.getTitle());
         holder.newsDateTextView.setText(newsItem.getPostedDate());
-        holder.newsImageView.setImageResource(newsItem.getImageResId());
+
+        // --- Image Loading Logic with Glide ---
+        if (newsItem.getImageUrl() != null && !newsItem.getImageUrl().isEmpty()) {
+            Glide.with(holder.newsImageView.getContext())
+                    .load(newsItem.getImageUrl())
+                    .placeholder(R.drawable.news_placeholder) // Show placeholder while loading
+                    .error(R.drawable.news_placeholder) // Show placeholder if image loading fails
+                    .into(holder.newsImageView);
+        } else {
+            // If no imageUrl, use the local drawable placeholder
+            holder.newsImageView.setImageResource(newsItem.getImageResId() != 0 ? newsItem.getImageResId() : R.drawable.news_placeholder);
+        }
+        // --- End Image Loading Logic ---
 
         holder.itemView.setOnClickListener(v -> {
             if (listener != null) {
