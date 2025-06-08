@@ -8,7 +8,7 @@
     app:cardCornerRadius="16dp"
     app:cardElevation="4dp"
     app:strokeColor="@android:color/transparent"
-    app:cardBackgroundColor="@color/card_background"> <LinearLayout
+    app:cardBackgroundColor="@color/bookmarked_news_card"> <LinearLayout
     android:layout_width="match_parent"
     android:layout_height="wrap_content"
     android:orientation="vertical">

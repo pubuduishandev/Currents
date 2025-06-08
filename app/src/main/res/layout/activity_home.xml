@@ -62,7 +62,9 @@
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintEnd_toEndOf="parent"
         app:menu="@menu/bottom_navigation_menu"
-        app:itemIconTint="@color/secondary_color"
-        app:itemTextColor="@color/secondary_color" />
+        app:itemIconTint="@color/bottom_nav_item_colors"
+        app:itemTextColor="@color/bottom_nav_item_colors"
+        android:background="@color/bottom_nav_bar_background"
+        app:itemActiveIndicatorStyle="@style/Custom.Indicator"/>
 
 </androidx.constraintlayout.widget.ConstraintLayout>

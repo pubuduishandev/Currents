@@ -4,5 +4,9 @@
         <item name="colorPrimary">@color/primary_color</item>
     </style>
 
+    <style name="Custom.Indicator" parent="Widget.Material3.BottomNavigationView.ActiveIndicator">
+        <item name="android:color">@color/bottom_nav_bar_selected_indicator</item>
+    </style>
+
     <style name="Theme.Currents" parent="Base.Theme.Currents" />
 </resources>

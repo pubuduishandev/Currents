@@ -61,7 +61,7 @@
 
             <com.google.android.material.chip.Chip
                 android:id="@+id/chipSports"
-                style="@style/Widget.Material3.Chip.Filter"
+                app:chipBackgroundColor="@color/bg_chip_state_list"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
                 android:text="@string/sports"
@@ -69,7 +69,7 @@
 
             <com.google.android.material.chip.Chip
                 android:id="@+id/chipAcademic"
-                style="@style/Widget.Material3.Chip.Filter"
+                app:chipBackgroundColor="@color/bg_chip_state_list"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
                 android:text="@string/academic"
@@ -77,7 +77,7 @@
 
             <com.google.android.material.chip.Chip
                 android:id="@+id/chipEvents"
-                style="@style/Widget.Material3.Chip.Filter"
+                app:chipBackgroundColor="@color/bg_chip_state_list"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
                 android:text="@string/events"

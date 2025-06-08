@@ -12,11 +12,16 @@
     <color name="success_color">#4CAF50</color>
     <color name="warning_color">#FF9800</color>
     <color name="info_color">#2196F3</color>
-    <color name="card_background">#fef7ff</color>
+    <color name="card_background">#EEEEEE</color>
     <color name="divider_color">#E0E0E0</color>
     <color name="placeholder_color">#BDBDBD</color>"
     <color name="positive_button_color">@color/primary_color</color>
     <color name="negative_button_color">#b3261e</color>
-    <color name="search_bar_background">#ECE5F6</color>
-    <color name="bottom_nav_bar_background">#ECE5F6</color>
+    <color name="search_bar_background">#E8F9FF</color>
+    <color name="bottom_nav_bar_background">#E8F9FF</color>
+    <color name="bottom_nav_bar_selected_indicator">#C4D9FF</color>
+    <color name="bookmarked_news_card">#C4D9FF</color>
+    <color name="news_card_background">#EEEEEE</color>
+    <color name="selected_chip_color">#C4D9FF</color>
+    <color name="avatar_background">#C4D9FF</color>
 </resources>
