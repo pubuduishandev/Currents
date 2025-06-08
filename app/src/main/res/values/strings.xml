@@ -140,5 +140,6 @@
     <string name="failed_to_clear_all_bookmarks">Cannot clear bookmarks: user not logged in</string>
     <string name="failed_to_bookmark_remove">Failed to clear saved articles: </string>
     <string name="failed_to_fetch_clear_bookmark">Failed to fetch bookmarks to clear</string>
+    <string name="no_news">News not available</string>
 
 </resources>

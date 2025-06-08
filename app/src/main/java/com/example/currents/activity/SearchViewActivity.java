@@ -16,36 +16,45 @@ import com.example.currents.R;
 import com.example.currents.adapter.NewsAdapter;
 import com.example.currents.model.NewsItem;
 import com.google.android.material.appbar.MaterialToolbar;
-import com.google.android.material.chip.Chip; // Import Chip
-import com.google.android.material.chip.ChipGroup; // Import ChipGroup
+import com.google.android.material.chip.Chip;
+import com.google.android.material.chip.ChipGroup;
 
 import java.util.ArrayList;
 import java.util.List;
-import java.util.Locale; // For toLowerCase() with Locale
+import java.util.Locale;
 import java.util.stream.Collectors;
 
 public class SearchViewActivity extends AppCompatActivity {
-
+    // UI components
     private MaterialToolbar searchToolbar;
     private SearchView appCompatSearchView;
     private RecyclerView searchResultsRecyclerView;
     private NewsAdapter searchResultsAdapter;
+    private ChipGroup categoryChipGroup;
 
-    private ChipGroup categoryChipGroup; // Declare ChipGroup
-    private String selectedCategoryFilter = ""; // To store the currently selected category
+    // To store the currently selected category
+    private String selectedCategoryFilter = "";
 
+    // To hold all available news items and the currently filtered items
     private List<NewsItem> allAvailableNewsItems;
-    private List<NewsItem> currentFilteredNewsItems; // New list to hold items filtered by category
 
+    // New list to hold items filtered by category
+    private List<NewsItem> currentFilteredNewsItems;
+
+    // Request code for search activity result
     public static final int SEARCH_REQUEST_CODE = 1;
+
+    // Intent extras for passing data
     public static final String EXTRA_ALL_NEWS_ITEMS = "extra_all_news_items";
     public static final String EXTRA_SELECTED_NEWS_ITEM = "extra_selected_news_item";
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
+        // Call the superclass method
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_search_view);
 
+        // Initialize UI components
         searchToolbar = findViewById(R.id.searchToolbar);
         appCompatSearchView = findViewById(R.id.appCompatSearchView);
         searchResultsRecyclerView = findViewById(R.id.searchResultsRecyclerView);
@@ -66,7 +75,7 @@ public class SearchViewActivity extends AppCompatActivity {
         } else {
             allAvailableNewsItems = new ArrayList<>();
             currentFilteredNewsItems = new ArrayList<>();
-            Toast.makeText(this, "No news data available for search.", Toast.LENGTH_LONG).show();
+            Toast.makeText(this, R.string.no_news, Toast.LENGTH_LONG).show();
         }
 
         searchResultsAdapter = new NewsAdapter(new ArrayList<>(), new NewsAdapter.OnNewsClickListener() {
@@ -121,6 +130,7 @@ public class SearchViewActivity extends AppCompatActivity {
         });
     }
 
+    // Method to set up the ChipGroup for category filtering
     private void setupChipGroup() {
         categoryChipGroup.setOnCheckedStateChangeListener((group, checkedIds) -> {
             if (checkedIds.isEmpty()) {
@@ -132,18 +142,15 @@ public class SearchViewActivity extends AppCompatActivity {
             // Re-run the search with the updated category filter
             performSearch(appCompatSearchView.getQuery().toString());
         });
-
-        // If you want to uncheck all chips easily
-        // You might consider adding a "Clear Filter" chip or a button.
-        // For now, clearing the search query will also clear the category filter via onCloseListener.
     }
 
+    // Method to add chips dynamically based on available categories in news items
     private void clearCategorySelection() {
         categoryChipGroup.clearCheck();
         selectedCategoryFilter = "";
     }
 
-
+    // Method to perform the search based on the current query and selected category
     private void performSearch(String query) {
         if (allAvailableNewsItems == null || allAvailableNewsItems.isEmpty()) {
             searchResultsAdapter.setNewsList(new ArrayList<>());
@@ -185,6 +192,7 @@ public class SearchViewActivity extends AppCompatActivity {
         }
     }
 
+    // Method to handle back press and hide keyboard
     @Override
     public void onBackPressed() {
         hideKeyboard(appCompatSearchView);
@@ -192,6 +200,7 @@ public class SearchViewActivity extends AppCompatActivity {
         super.onBackPressed();
     }
 
+    // Helper methods to show and hide the keyboard
     private void showKeyboard(View view) {
         if (view.requestFocus()) {
             InputMethodManager imm = (InputMethodManager) getSystemService(Context.INPUT_METHOD_SERVICE);
@@ -201,6 +210,7 @@ public class SearchViewActivity extends AppCompatActivity {
         }
     }
 
+    // Method to hide the keyboard
     private void hideKeyboard(View view) {
         InputMethodManager imm = (InputMethodManager) getSystemService(Context.INPUT_METHOD_SERVICE);
         if (imm != null) {
