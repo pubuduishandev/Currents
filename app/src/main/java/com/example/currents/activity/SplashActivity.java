@@ -15,9 +15,11 @@ public class SplashActivity extends AppCompatActivity{
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
+        // Call the superclass method
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_splash);
 
+        // Set a delay for the splash screen
         new Handler(Looper.getMainLooper()).postDelayed(() -> {
             // Create an Intent to start the LoginActivity
             Intent intent = new Intent(SplashActivity.this, LoginActivity.class);
