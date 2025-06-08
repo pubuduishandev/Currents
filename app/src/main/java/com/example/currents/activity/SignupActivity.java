@@ -19,6 +19,7 @@ import androidx.appcompat.app.AppCompatActivity;
 import com.example.currents.R;
 import com.google.android.gms.tasks.OnCompleteListener;
 import com.google.android.gms.tasks.Task;
+import com.google.android.material.dialog.MaterialAlertDialogBuilder;
 import com.google.android.material.button.MaterialButton;
 import com.google.android.material.textfield.TextInputEditText;
 import com.google.android.material.textfield.TextInputLayout;
@@ -249,12 +250,7 @@ public class SignupActivity extends AppCompatActivity {
             }
             Toast.makeText(SignupActivity.this, "Please fix the errors to sign up", Toast.LENGTH_SHORT).show();
         } else {
-            // All client-side validations passed. Proceed with Firebase checks.
-            signupButton.setEnabled(false); // Disable button
-            signupButton.setText("Creating Account..."); // Provide feedback
-
-            // 4. Check if username is already in use in Firestore
-            checkUsernameAndCreateUser(firstName, lastName, username, email, password);
+            showCreateAccountConfirmationDialog();
         }
     }
 
@@ -417,6 +413,30 @@ public class SignupActivity extends AppCompatActivity {
                 });
     }
 
+    private void showCreateAccountConfirmationDialog() {
+        new MaterialAlertDialogBuilder(this)
+                .setTitle(R.string.create_account_title)
+                .setMessage(R.string.create_account_message)
+                .setPositiveButton(R.string.yes, (dialog, which) -> {
+                    // Store values at the time of the signup attempt.
+                    String firstName = firstNameEditText.getText().toString().trim();
+                    String lastName = lastNameEditText.getText().toString().trim();
+                    String username = userNameEditText.getText().toString().trim();
+                    String email = emailEditText.getText().toString().trim();
+                    String password = passwordEditText.getText().toString().trim();
+
+                    // All client-side validations passed. Proceed with Firebase checks.
+                    signupButton.setEnabled(false); // Disable button
+                    signupButton.setText("Creating Account..."); // Provide feedback
+
+                    // Check if username is already in use in Firestore
+                    checkUsernameAndCreateUser(firstName, lastName, username, email, password);
+                })
+                .setNegativeButton(R.string.no, (dialog, which) -> {
+                    dialog.dismiss();
+                })
+                .show();
+    }
 
     /**
      * Resets the signup form UI elements (button state).
