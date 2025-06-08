@@ -126,4 +126,14 @@
     <string name="no_saved_news">No Saved News</string>
     <string name="no_saved_news_message">Looks like no any saved articles yet.</string>
     <string name="failed_to_load_bookmarks">Failed to load bookmarks</string>
+    <string name="logging_error_bookmarks">Please log in to bookmark news.</string>
+    <string name="article_missing">Cannot bookmark: News article ID is missing.</string>
+    <string name="bookmark_removed">Bookmark removed</string>
+    <string name="bookmark_remove_error">Failed to remove bookmark</string>
+    <string name="bookmark_added">Bookmark added</string>
+    <string name="bookmark_add_error">Failed to add bookmark</string>
+    <string name="reading_aloud">Reading news aloud</string>
+    <string name="already_reading">Already reading</string>
+    <string name="content_error">No content to read</string>
+    <string name="reading_stopped">Reading stopped</string>
 </resources>

@@ -17,8 +17,10 @@ import androidx.annotation.NonNull;
 import androidx.appcompat.app.AppCompatActivity;
 import androidx.appcompat.widget.Toolbar;
 
-import com.bumptech.glide.Glide; // Import Glide library
+import com.bumptech.glide.Glide;
+
 import com.example.currents.R;
+
 import com.google.android.gms.tasks.OnCompleteListener;
 import com.google.android.gms.tasks.OnFailureListener;
 import com.google.android.gms.tasks.OnSuccessListener;
@@ -43,23 +45,29 @@ import java.util.Locale;
 import java.util.Map;
 
 public class ReadNewsActivity extends AppCompatActivity {
+    // Tag for logging
     private static final String TAG = "ReadNewsActivity";
 
+    // UI Components
     private Toolbar toolbar;
     private TextView readNewsTitleTextView;
     private ImageView readNewsImageView;
     private TextView readNewsContentTextView;
     private TextView readNewsPostedDateTextView;
 
+    // Menu Items
     private MenuItem bookmarkMenuItem;
     private MenuItem readAloudMenuItem;
 
+    // State Variables
     private boolean isBookmarked = false;
     private boolean isReadingAloud = false;
     private boolean isTtsInitialized = false;
 
+    // Text-to-Speech
     private TextToSpeech textToSpeech;
 
+    // Current News Data
     private String currentNewsContent;
     private String currentNewsTitle;
     private String currentNewsDate;
@@ -67,37 +75,42 @@ public class ReadNewsActivity extends AppCompatActivity {
     private String currentNewsImageUrl; // NEW: To store the URL from Firebase Storage
     private String currentArticleId;
 
-    // Firebase
+    // Firebase Components
     private FirebaseFirestore db;
     private FirebaseAuth mAuth;
     private CollectionReference bookmarksRef;
     private String currentUserId;
     private String foundBookmarkDocId = null;
-
     private ListenerRegistration articleListenerRegistration;
 
+    // Shared Preferences for storing current user ID
     private static final String PREF_NAME = "CurrentUserPrefs";
     private static final String KEY_USER_UID = "user_uid";
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
+        // Call the superclass method
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_read_news);
 
+        // Initialize the toolbar
         toolbar = findViewById(R.id.readNewsToolBar);
         setSupportActionBar(toolbar);
 
+        // Enable the Up button in the toolbar
         if (getSupportActionBar() != null) {
             getSupportActionBar().setDisplayHomeAsUpEnabled(true);
             getSupportActionBar().setDisplayShowHomeEnabled(true);
             getSupportActionBar().setTitle("");
         }
 
+        // Initialize UI components
         readNewsTitleTextView = findViewById(R.id.readNewsTitle);
         readNewsImageView = findViewById(R.id.readNewsImage);
         readNewsContentTextView = findViewById(R.id.readNewsContent);
         readNewsPostedDateTextView = findViewById(R.id.readNewsPostedDate);
 
+        // Initialize Firebase components
         Intent intent = getIntent();
         if (intent != null) {
             currentNewsTitle = intent.getStringExtra(HomeActivity.EXTRA_NEWS_TITLE);
@@ -152,21 +165,25 @@ public class ReadNewsActivity extends AppCompatActivity {
             }
         }
 
+        // Initialize Text-to-Speech
         initTextToSpeech();
     }
 
+    // Lifecycle methods for starting and stopping the article real-time listener
     @Override
     protected void onStart() {
         super.onStart();
         startArticleRealtimeListener();
     }
 
+    // Lifecycle method to stop the listener when the activity is no longer visible
     @Override
     protected void onStop() {
         super.onStop();
         stopArticleRealtimeListener();
     }
 
+    // Method to start listening for real-time updates on the article
     private void startArticleRealtimeListener() {
         if (currentArticleId == null || currentArticleId.isEmpty()) {
             Log.e(TAG, "Cannot start article real-time listener: currentArticleId is null or empty.");
@@ -229,10 +246,8 @@ public class ReadNewsActivity extends AppCompatActivity {
         }
     }
 
-    /**
-     * Helper method to load images using Glide.
-     * Prioritizes imageUrl; falls back to imageResId if imageUrl is null or empty.
-     */
+    // Helper method to load images using Glide.
+    // Prioritizes imageUrl; falls back to imageResId if imageUrl is null or empty.
     private void loadImageWithGlide(String imageUrl, int localImageResId) {
         if (imageUrl != null && !imageUrl.isEmpty()) {
             Glide.with(this)
@@ -255,7 +270,7 @@ public class ReadNewsActivity extends AppCompatActivity {
         }
     }
 
-
+    // Method to check if the current news article is bookmarked by the user
     private void checkBookmarkStatus() {
         if (currentUserId == null || currentArticleId == null || currentArticleId.isEmpty()) {
             isBookmarked = false;
@@ -295,40 +310,36 @@ public class ReadNewsActivity extends AppCompatActivity {
                 });
     }
 
+    // Method to toggle the bookmark adding or removing
     private void toggleBookmark() {
         if (currentUserId == null) {
-            Toast.makeText(this, "Please log in to bookmark news.", Toast.LENGTH_SHORT).show();
+            Toast.makeText(this, R.string.logging_error_bookmarks, Toast.LENGTH_SHORT).show();
             return;
         }
         if (currentArticleId == null || currentArticleId.isEmpty()) {
-            Toast.makeText(this, "Cannot bookmark: News article ID is missing.", Toast.LENGTH_SHORT).show();
+            Toast.makeText(this, R.string.article_missing, Toast.LENGTH_SHORT).show();
             return;
         }
-        if (currentNewsTitle == null || currentNewsTitle.isEmpty()) {
-            Toast.makeText(this, "Cannot bookmark: News title is missing.", Toast.LENGTH_SHORT).show();
-            return;
-        }
-
         if (isBookmarked && foundBookmarkDocId != null) {
             bookmarksRef.document(foundBookmarkDocId)
-                    .delete()
-                    .addOnSuccessListener(new OnSuccessListener<Void>() {
-                        @Override
-                        public void onSuccess(Void aVoid) {
-                            isBookmarked = false;
-                            foundBookmarkDocId = null;
-                            updateBookmarkIcon();
-                            Toast.makeText(ReadNewsActivity.this, "Bookmark removed", Toast.LENGTH_SHORT).show();
-                            Log.d(TAG, "Bookmark successfully deleted for article: " + currentArticleId);
-                        }
-                    })
-                    .addOnFailureListener(new OnFailureListener() {
-                        @Override
-                        public void onFailure(@NonNull Exception e) {
-                            Log.e(TAG, "Error deleting bookmark", e);
-                            Toast.makeText(ReadNewsActivity.this, "Failed to remove bookmark.", Toast.LENGTH_SHORT).show();
-                        }
-                    });
+                .delete()
+                .addOnSuccessListener(new OnSuccessListener<Void>() {
+                    @Override
+                    public void onSuccess(Void aVoid) {
+                        isBookmarked = false;
+                        foundBookmarkDocId = null;
+                        updateBookmarkIcon();
+                        Toast.makeText(ReadNewsActivity.this, R.string.bookmark_removed, Toast.LENGTH_SHORT).show();
+                        Log.d(TAG, "Bookmark successfully deleted for article: " + currentArticleId);
+                    }
+                })
+                .addOnFailureListener(new OnFailureListener() {
+                    @Override
+                    public void onFailure(@NonNull Exception e) {
+                        Log.e(TAG, "Error deleting bookmark", e);
+                        Toast.makeText(ReadNewsActivity.this, R.string.bookmark_remove_error, Toast.LENGTH_SHORT).show();
+                    }
+                });
         } else {
             Map<String, Object> bookmark = new HashMap<>();
             bookmark.put("userId", currentUserId);
@@ -336,26 +347,27 @@ public class ReadNewsActivity extends AppCompatActivity {
             bookmark.put("createdAt", FieldValue.serverTimestamp());
 
             bookmarksRef.add(bookmark)
-                    .addOnSuccessListener(new OnSuccessListener<DocumentReference>() {
-                        @Override
-                        public void onSuccess(DocumentReference documentReference) {
-                            isBookmarked = true;
-                            foundBookmarkDocId = documentReference.getId();
-                            updateBookmarkIcon();
-                            Toast.makeText(ReadNewsActivity.this, "Bookmark added", Toast.LENGTH_SHORT).show();
-                            Log.d(TAG, "Bookmark successfully added with ID: " + foundBookmarkDocId);
-                        }
-                    })
-                    .addOnFailureListener(new OnFailureListener() {
-                        @Override
-                        public void onFailure(@NonNull Exception e) {
-                            Log.e(TAG, "Error adding bookmark", e);
-                            Toast.makeText(ReadNewsActivity.this, "Failed to add bookmark.", Toast.LENGTH_SHORT).show();
-                        }
-                    });
+                .addOnSuccessListener(new OnSuccessListener<DocumentReference>() {
+                    @Override
+                    public void onSuccess(DocumentReference documentReference) {
+                        isBookmarked = true;
+                        foundBookmarkDocId = documentReference.getId();
+                        updateBookmarkIcon();
+                        Toast.makeText(ReadNewsActivity.this, R.string.bookmark_added, Toast.LENGTH_SHORT).show();
+                        Log.d(TAG, "Bookmark successfully added with ID: " + foundBookmarkDocId);
+                    }
+                })
+                .addOnFailureListener(new OnFailureListener() {
+                    @Override
+                    public void onFailure(@NonNull Exception e) {
+                        Log.e(TAG, "Error adding bookmark", e);
+                        Toast.makeText(ReadNewsActivity.this, R.string.bookmark_add_error, Toast.LENGTH_SHORT).show();
+                    }
+                });
         }
     }
 
+    // Method to update the bookmark icon based on the current state
     private void updateBookmarkIcon() {
         if (bookmarkMenuItem != null) {
             if (isBookmarked) {
@@ -367,6 +379,7 @@ public class ReadNewsActivity extends AppCompatActivity {
         }
     }
 
+    // Method to initialize Text-to-Speech
     private void initTextToSpeech() {
         isTtsInitialized = false;
         updateReadAloudIcon();
@@ -417,28 +430,31 @@ public class ReadNewsActivity extends AppCompatActivity {
         });
     }
 
+    // Method to start or stop reading the news content aloud
     private void startReadingAloud() {
         if (textToSpeech != null && isTtsInitialized && !textToSpeech.isSpeaking() && currentNewsContent != null && !currentNewsContent.isEmpty()) {
             textToSpeech.speak(currentNewsContent, TextToSpeech.QUEUE_FLUSH, null, "newsContent");
             isReadingAloud = true;
-            Toast.makeText(this, "Reading news aloud...", Toast.LENGTH_SHORT).show();
+            Toast.makeText(this, R.string.reading_aloud, Toast.LENGTH_SHORT).show();
         } else if (textToSpeech != null && textToSpeech.isSpeaking()) {
-            Toast.makeText(this, "Already reading.", Toast.LENGTH_SHORT).show();
+            Toast.makeText(this, R.string.already_reading, Toast.LENGTH_SHORT).show();
         } else if (currentNewsContent == null || currentNewsContent.isEmpty()) {
-            Toast.makeText(this, "No content to read.", Toast.LENGTH_SHORT).show();
+            Toast.makeText(this, R.string.content_error, Toast.LENGTH_SHORT).show();
         }
         updateReadAloudIcon();
     }
 
+    // Method to stop reading the news content aloud
     private void stopReadingAloud() {
         if (textToSpeech != null && textToSpeech.isSpeaking()) {
             textToSpeech.stop();
             isReadingAloud = false;
-            Toast.makeText(this, "Reading stopped.", Toast.LENGTH_SHORT).show();
+            Toast.makeText(this, R.string.reading_stopped, Toast.LENGTH_SHORT).show();
         }
         updateReadAloudIcon();
     }
 
+    // Method to update the Read Aloud icon based on the TTS state
     private void updateReadAloudIcon() {
         if (readAloudMenuItem != null) {
             if (!isTtsInitialized) {
@@ -454,6 +470,7 @@ public class ReadNewsActivity extends AppCompatActivity {
         }
     }
 
+    // Method to inflate the menu and set up the bookmark and read aloud icons
     @Override
     public boolean onCreateOptionsMenu(Menu menu) {
         getMenuInflater().inflate(R.menu.read_news_toolbar_menu, menu);
@@ -465,6 +482,7 @@ public class ReadNewsActivity extends AppCompatActivity {
         return true;
     }
 
+    // Method to handle menu item selections
     @Override
     public boolean onOptionsItemSelected(MenuItem item) {
         int id = item.getItemId();
@@ -488,12 +506,14 @@ public class ReadNewsActivity extends AppCompatActivity {
         return super.onOptionsItemSelected(item);
     }
 
+    // Method to handle the Up button in the toolbar
     @Override
     public boolean onSupportNavigateUp() {
         onBackPressed();
         return true;
     }
 
+    // Lifecycle method to clean up Text-to-Speech resources
     @Override
     protected void onDestroy() {
         if (textToSpeech != null) {
