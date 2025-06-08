@@ -15,19 +15,23 @@ import androidx.appcompat.widget.Toolbar;
 import androidx.cardview.widget.CardView;
 
 import com.example.currents.R;
-import com.example.currents.ui.bottomsheet.FeedbackBottomSheet; // Import the new bottom sheet
+import com.example.currents.ui.bottomsheet.FeedbackBottomSheet;
 
 public class AboutActivity extends AppCompatActivity {
+    //UI components
     private Toolbar toolbar;
     private CardView emailCard;
-    private CardView gitHubCard; // Corrected ID from githubCard to gitHubCard as per XML
-    private CardView linkedInCard; // Corrected ID from linkedinCard to linkedInCard as per XML
+    private CardView gitHubCard;
+    private CardView linkedInCard;
 
     @SuppressLint("MissingInflatedId")
     @Override
     protected void onCreate(Bundle savedInstanceState) {
+        // Call the superclass method
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_about);
+
+        // Initialize the Toolbar
         toolbar = findViewById(R.id.aboutToolBar);
         setSupportActionBar(toolbar);
 
@@ -41,6 +45,7 @@ public class AboutActivity extends AppCompatActivity {
         gitHubCard = findViewById(R.id.gitHubCard); // Use the correct ID from XML
         linkedInCard = findViewById(R.id.linkedInCard); // Use the correct ID from XML
 
+        // Set click listeners for the CardViews
         emailCard.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View view) {
@@ -63,6 +68,7 @@ public class AboutActivity extends AppCompatActivity {
         });
     }
 
+    // Method to send an email
     void sendEmail(String s) {
         try{
             Uri uri = Uri.parse(s);
@@ -72,6 +78,7 @@ public class AboutActivity extends AppCompatActivity {
         }
     }
 
+    // Methods to visit GitHub and LinkedIn profiles
     void visitGitHub(String s) {
         try{
             Uri uri = Uri.parse(s);
@@ -81,6 +88,7 @@ public class AboutActivity extends AppCompatActivity {
         }
     }
 
+    // Method to visit LinkedIn profile
     void visitLinkedIn(String s) {
         try{
             Uri uri = Uri.parse(s);
@@ -90,6 +98,7 @@ public class AboutActivity extends AppCompatActivity {
         }
     }
 
+    // Inflate the menu and handle item selection
     @Override
     public boolean onCreateOptionsMenu(Menu menu) {
         MenuInflater inflater = getMenuInflater();
@@ -97,6 +106,7 @@ public class AboutActivity extends AppCompatActivity {
         return true;
     }
 
+    // Handle menu item selection
     @Override
     public boolean onOptionsItemSelected(MenuItem item) {
         int id = item.getItemId();
@@ -111,6 +121,7 @@ public class AboutActivity extends AppCompatActivity {
         return super.onOptionsItemSelected(item);
     }
 
+    // Handle the back navigation when the up button is pressed
     @Override
     public boolean onSupportNavigateUp() {
         onBackPressed();
