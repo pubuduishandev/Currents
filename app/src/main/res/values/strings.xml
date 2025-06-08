@@ -136,4 +136,9 @@
     <string name="already_reading">Already reading</string>
     <string name="content_error">No content to read</string>
     <string name="reading_stopped">Reading stopped</string>
+    <string name="saved_article_error">Please log in to see your saved articles</string>
+    <string name="failed_to_clear_all_bookmarks">Cannot clear bookmarks: user not logged in</string>
+    <string name="failed_to_bookmark_remove">Failed to clear saved articles: </string>
+    <string name="failed_to_fetch_clear_bookmark">Failed to fetch bookmarks to clear</string>
+
 </resources>
