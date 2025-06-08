@@ -27,6 +27,7 @@ import com.google.android.material.chip.ChipGroup;
 import com.google.firebase.auth.FirebaseAuth;
 import com.google.firebase.auth.FirebaseUser;
 import com.google.firebase.firestore.FirebaseFirestore;
+import com.google.firebase.firestore.Query;
 import com.google.firebase.firestore.QueryDocumentSnapshot;
 import com.google.firebase.Timestamp;
 import com.google.firebase.firestore.FieldPath;
@@ -228,6 +229,7 @@ public class SavedNewsActivity extends AppCompatActivity implements NewsAdapter.
 
                     db.collection("articles")
                         .whereIn(FieldPath.documentId(), finalArticleIds)
+                        .orderBy("createdAt", Query.Direction.DESCENDING)
                         .get()
                         .addOnCompleteListener(articleTask -> {
                             if (articleTask.isSuccessful()) {
