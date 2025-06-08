@@ -11,10 +11,10 @@
     <androidx.appcompat.widget.Toolbar
         android:layout_width="match_parent"
         android:layout_height="?attr/actionBarSize"
-        android:background="@color/background_color"
+        android:background="@color/app_bar_color"
         android:id="@+id/readNewsToolBar"
         app:navigationIcon="@drawable/arrow_back"
-        app:titleTextColor="@color/background_color"
+        app:titleTextColor="@color/app_bar_color"
         android:theme="@style/ThemeOverlay.AppCompat.Light"
         app:layout_constraintTop_toTopOf="parent"
         app:layout_constraintStart_toStartOf="parent"
