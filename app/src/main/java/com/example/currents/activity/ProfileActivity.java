@@ -8,13 +8,13 @@ import android.os.Bundle;
 import android.view.Menu;
 import android.view.MenuInflater;
 import android.view.MenuItem;
-import androidx.annotation.NonNull;
 import android.view.View;
 import android.widget.Button;
 import android.widget.LinearLayout;
 import android.widget.TextView;
 import android.widget.Toast;
 
+import androidx.annotation.NonNull;
 import androidx.appcompat.app.AppCompatActivity;
 import androidx.appcompat.widget.Toolbar;
 import androidx.cardview.widget.CardView;
@@ -22,20 +22,20 @@ import androidx.cardview.widget.CardView;
 import com.example.currents.R;
 import com.example.currents.ui.bottomsheet.ChangePasswordBottomSheet;
 import com.example.currents.ui.bottomsheet.EditProfileBottomSheet;
+
 import com.google.android.material.dialog.MaterialAlertDialogBuilder;
 import com.google.android.gms.tasks.OnCompleteListener;
 import com.google.android.gms.tasks.Task;
 import com.google.firebase.auth.FirebaseAuth;
 import com.google.firebase.auth.FirebaseUser;
 import com.google.firebase.firestore.FirebaseFirestore;
-import com.google.firebase.Timestamp; // Import Timestamp for setting updatedAt
+import com.google.firebase.Timestamp;
 
 import java.util.HashMap;
 import java.util.Map;
 
-public class ProfileActivity extends AppCompatActivity
-        implements EditProfileBottomSheet.OnProfileEditedListener {
-
+public class ProfileActivity extends AppCompatActivity implements EditProfileBottomSheet.OnProfileEditedListener {
+    // UI components
     private Toolbar toolbar;
     private TextView avatarInitialsTextView;
     private TextView userNameTextView;
@@ -45,7 +45,6 @@ public class ProfileActivity extends AppCompatActivity
     private TextView passwordValue;
     private CardView passwordCard;
     private LinearLayout logoutCard;
-
     private Button deleteAccountButton;
 
     // SharedPreferences name and keys
@@ -55,8 +54,7 @@ public class ProfileActivity extends AppCompatActivity
     private static final String KEY_FIRST_NAME = "first_name";
     private static final String KEY_LAST_NAME = "last_name";
     private static final String KEY_EMAIL = "email";
-    // REMOVED: private static final String KEY_LAST_PASSWORD_CHANGE = "last_password_change";
-    private static final String KEY_UPDATED_AT = "updated_at"; // NEW: for storing updatedAt timestamp
+    private static final String KEY_UPDATED_AT = "updated_at";
 
     // Member variables to hold the current profile data
     private String currentUid;
@@ -66,17 +64,14 @@ public class ProfileActivity extends AppCompatActivity
     private String currentEmail;
     private long currentUpdatedAtMillis;
 
-    // Not used in this version but kept for context:
-    // private String pendingNewFirstName;
-    // private String pendingNewLastName;
-    // private String pendingNewUsername;
-
     @SuppressLint("MissingInflatedId")
     @Override
     protected void onCreate(Bundle savedInstanceState) {
+        // Call the superclass method
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_profile);
 
+        // Initialize UI components
         toolbar = findViewById(R.id.profileToolBar);
         setSupportActionBar(toolbar);
 
@@ -85,6 +80,7 @@ public class ProfileActivity extends AppCompatActivity
             getSupportActionBar().setDisplayShowHomeEnabled(true);
         }
 
+        // Initialize SharedPreferences and load profile data
         avatarInitialsTextView = findViewById(R.id.avatarInitialsTextView);
         userNameTextView = findViewById(R.id.userNameTextView);
         fullNameValue = findViewById(R.id.fullNameValue);
@@ -94,6 +90,7 @@ public class ProfileActivity extends AppCompatActivity
         passwordCard = findViewById(R.id.passwordCard);
         deleteAccountButton = findViewById(R.id.deleteAccountButton);
 
+        // Initialize logoutCard if it exists in the layout
         loadProfileDataFromSharedPreferences();
         updateProfileUI();
 
@@ -113,6 +110,7 @@ public class ProfileActivity extends AppCompatActivity
             }
         });
 
+        // Initialize logoutCard and set OnClickListener
         if (logoutCard != null) { // Check if logoutCard is not null before setting listener
             logoutCard.setOnClickListener(new View.OnClickListener() {
                 @Override
@@ -123,6 +121,7 @@ public class ProfileActivity extends AppCompatActivity
         }
     }
 
+    // Load profile data from SharedPreferences
     private void loadProfileDataFromSharedPreferences() {
         SharedPreferences sharedPref = getSharedPreferences(PREF_NAME, Context.MODE_PRIVATE);
 
@@ -134,6 +133,7 @@ public class ProfileActivity extends AppCompatActivity
         currentUpdatedAtMillis = sharedPref.getLong(KEY_UPDATED_AT, 0L); // NEW: Load updatedAt
     }
 
+    // Update the UI with the loaded profile data
     private void updateProfileUI() {
         String initials = "";
         if (currentFirstName != null && !currentFirstName.isEmpty()) {
@@ -152,6 +152,7 @@ public class ProfileActivity extends AppCompatActivity
         passwordValue.setText(R.string.password_change); // Reset to fixed text
     }
 
+    // Override onCreateOptionsMenu to inflate the menu
     @Override
     public boolean onCreateOptionsMenu(Menu menu) {
         MenuInflater inflater = getMenuInflater();
@@ -159,6 +160,7 @@ public class ProfileActivity extends AppCompatActivity
         return true;
     }
 
+    // Override onOptionsItemSelected to handle menu item clicks
     @Override
     public boolean onOptionsItemSelected(MenuItem item) {
         int id = item.getItemId();
@@ -186,17 +188,20 @@ public class ProfileActivity extends AppCompatActivity
         return super.onOptionsItemSelected(item);
     }
 
+    // Override onSupportNavigateUp to handle the back button in the toolbar
     @Override
     public boolean onSupportNavigateUp() {
         onBackPressed();
         return true;
     }
 
+    // Implement the OnProfileEditedListener interface method
     @Override
     public void onProfileEdited(String newFirstName, String newLastName, String newUsername) {
         updateProfileInFirestore(newFirstName, newLastName, newUsername, currentEmail);
     }
 
+    // Method to update the profile in firestore
     private void updateProfileInFirestore(String firstName, String lastName, String username, String email) {
         FirebaseUser user = FirebaseAuth.getInstance().getCurrentUser();
         if (user == null) {
@@ -213,21 +218,21 @@ public class ProfileActivity extends AppCompatActivity
         updates.put("updatedAt", Timestamp.now()); // NEW: Update the updatedAt timestamp
 
         db.collection("users").document(user.getUid())
-                .update(updates)
-                .addOnSuccessListener(aVoid -> {
-                    Toast.makeText(ProfileActivity.this, R.string.profile_updated_success, Toast.LENGTH_SHORT).show();
-                    // Update local SharedPreferences and UI only after successful Firestore update
-                    // NEW: Also update currentUpdatedAtMillis in shared prefs
-                    saveProfileDataToSharedPreferences(firstName, lastName, username, email, Timestamp.now().toDate().getTime());
-                    currentFirstName = firstName;
-                    currentLastName = lastName;
-                    currentUsername = username;
-                    currentUpdatedAtMillis = Timestamp.now().toDate().getTime(); // Update member variable
-                    updateProfileUI(); // Refresh UI
-                })
-                .addOnFailureListener(e -> {
-                    Toast.makeText(ProfileActivity.this, R.string.profile_update_error + e.getMessage(), Toast.LENGTH_LONG).show();
-                });
+            .update(updates)
+            .addOnSuccessListener(aVoid -> {
+                Toast.makeText(ProfileActivity.this, R.string.profile_updated_success, Toast.LENGTH_SHORT).show();
+                // Update local SharedPreferences and UI only after successful firestore update
+                // NEW: Also update currentUpdatedAtMillis in shared prefs
+                saveProfileDataToSharedPreferences(firstName, lastName, username, email, Timestamp.now().toDate().getTime());
+                currentFirstName = firstName;
+                currentLastName = lastName;
+                currentUsername = username;
+                currentUpdatedAtMillis = Timestamp.now().toDate().getTime(); // Update member variable
+                updateProfileUI(); // Refresh UI
+            })
+            .addOnFailureListener(e -> {
+                Toast.makeText(ProfileActivity.this, R.string.profile_update_error + e.getMessage(), Toast.LENGTH_LONG).show();
+            });
     }
 
     // Helper method to save updated profile data to SharedPreferences
@@ -242,6 +247,7 @@ public class ProfileActivity extends AppCompatActivity
         editor.apply();
     }
 
+    // Method to sign out the user
     private void signOutUser() {
         FirebaseAuth.getInstance().signOut();
 
@@ -258,24 +264,26 @@ public class ProfileActivity extends AppCompatActivity
         finish();
     }
 
+    // Method to show a confirmation dialog before deleting the account
     private void showDeleteAccountConfirmationDialog() {
         new MaterialAlertDialogBuilder(this)
-                .setTitle(R.string.delete_account_title)
-                .setMessage(R.string.delete_account_message)
-                .setPositiveButton(R.string.yes, (dialog, which) -> {
-                    deleteUser();
-                })
-                .setNegativeButton(R.string.no, (dialog, which) -> {
-                    dialog.dismiss();
-                })
-                .show();
+            .setTitle(R.string.delete_account_title)
+            .setMessage(R.string.delete_account_message)
+            .setPositiveButton(R.string.yes, (dialog, which) -> {
+                deleteUser();
+            })
+            .setNegativeButton(R.string.no, (dialog, which) -> {
+                dialog.dismiss();
+            })
+            .show();
     }
 
+    // Method to delete the user account
     public void deleteUser() {
         FirebaseUser user = FirebaseAuth.getInstance().getCurrentUser();
 
         if (user == null) {
-            Toast.makeText(this, "No user logged in to delete.", Toast.LENGTH_SHORT).show();
+            Toast.makeText(this, R.string.no_user_found, Toast.LENGTH_SHORT).show();
             // Redirect to login if no user is found unexpectedly
             Intent intent = new Intent(ProfileActivity.this, LoginActivity.class);
             intent.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK | Intent.FLAG_ACTIVITY_CLEAR_TASK);
@@ -287,7 +295,7 @@ public class ProfileActivity extends AppCompatActivity
         String userId = user.getUid();
         FirebaseFirestore db = FirebaseFirestore.getInstance();
 
-        // Step 1: Delete user document from Firestore
+        // Step 1: Delete user document from firestore
         db.collection("users").document(userId)
             .delete()
             .addOnSuccessListener(aVoid -> {
