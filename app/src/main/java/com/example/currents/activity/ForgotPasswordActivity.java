@@ -23,17 +23,19 @@ import com.google.firebase.firestore.FirebaseFirestore;
 import com.google.firebase.firestore.QuerySnapshot;
 
 public class ForgotPasswordActivity extends AppCompatActivity {
-
+    // UI components
     private TextInputEditText emailEditText;
-    private MaterialButton requestOtpButton;
+    private MaterialButton requestLinkButton;
     private TextView backToLoginButton;
     private TextInputLayout emailInputLayout;
 
+    // Firebase instances
     private FirebaseAuth mAuth;
     private FirebaseFirestore db;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
+        // Call the superclass method
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_forgot_password);
 
@@ -43,7 +45,7 @@ public class ForgotPasswordActivity extends AppCompatActivity {
 
         // Initialize views
         emailEditText = findViewById(R.id.email_edit_text);
-        requestOtpButton = findViewById(R.id.request_otp_button);
+        requestLinkButton = findViewById(R.id.request_otp_button);
         backToLoginButton = findViewById(R.id.back_to_login_button);
         emailInputLayout = findViewById(R.id.email_input_layout);
 
@@ -64,8 +66,8 @@ public class ForgotPasswordActivity extends AppCompatActivity {
             public void afterTextChanged(Editable s) {}
         });
 
-        // Set OnClickListener for Request OTP button
-        requestOtpButton.setOnClickListener(new View.OnClickListener() {
+        // Set OnClickListener for Request Reset Link button
+        requestLinkButton.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
                 String email = emailEditText.getText().toString().trim();
@@ -91,6 +93,7 @@ public class ForgotPasswordActivity extends AppCompatActivity {
         });
     }
 
+    // Validate email input
     private boolean validateEmail(String email) {
         if (email.isEmpty()) {
             emailInputLayout.setError("Email cannot be empty");
@@ -104,67 +107,70 @@ public class ForgotPasswordActivity extends AppCompatActivity {
         return true;
     }
 
+    // Check if the email exists in firestore
     private void checkEmailExistsInFirestore(String email) {
         // Show loading state
-        requestOtpButton.setEnabled(false);
-        requestOtpButton.setText("Checking...");
+        requestLinkButton.setEnabled(false);
+        requestLinkButton.setText(R.string.checking);
 
-        // Query Firestore to check if email exists in users collection
+        // Query firestore to check if email exists in users collection
         db.collection("users")
-                .whereEqualTo("email", email)
-                .get()
-                .addOnCompleteListener(new OnCompleteListener<QuerySnapshot>() {
-                    @Override
-                    public void onComplete(@NonNull Task<QuerySnapshot> task) {
-                        if (task.isSuccessful()) {
-                            if (task.getResult() != null && !task.getResult().isEmpty()) {
-                                // Email exists in Firestore, send reset link
-                                sendPasswordResetEmail(email);
-                            } else {
-                                // Email not found in Firestore
-                                emailInputLayout.setError("This email is not registered");
-                                emailInputLayout.setErrorEnabled(true);
-                                Toast.makeText(ForgotPasswordActivity.this,
-                                        "No account found with this email",
-                                        Toast.LENGTH_SHORT).show();
-                                resetButtonState();
-                            }
+            .whereEqualTo("email", email)
+            .get()
+            .addOnCompleteListener(new OnCompleteListener<QuerySnapshot>() {
+                @Override
+                public void onComplete(@NonNull Task<QuerySnapshot> task) {
+                    if (task.isSuccessful()) {
+                        if (task.getResult() != null && !task.getResult().isEmpty()) {
+                            // Email exists in firestore, send reset link
+                            sendPasswordResetEmail(email);
                         } else {
-                            // Firestore query failed
+                            // Email not found in firestore
+                            emailInputLayout.setError("This email is not registered");
+                            emailInputLayout.setErrorEnabled(true);
                             Toast.makeText(ForgotPasswordActivity.this,
-                                    "Error checking email: " + task.getException().getMessage(),
+                                    R.string.no_account_found,
                                     Toast.LENGTH_SHORT).show();
                             resetButtonState();
                         }
+                    } else {
+                        // firestore query failed
+                        Toast.makeText(ForgotPasswordActivity.this,
+                                R.string.forgot_password_error + task.getException().getMessage(),
+                                Toast.LENGTH_SHORT).show();
+                        resetButtonState();
                     }
-                });
+                }
+            });
     }
 
+    // Send password reset email using Firebase Auth
     private void sendPasswordResetEmail(String email) {
         mAuth.sendPasswordResetEmail(email)
-                .addOnCompleteListener(new OnCompleteListener<Void>() {
-                    @Override
-                    public void onComplete(@NonNull Task<Void> task) {
-                        if (task.isSuccessful()) {
-                            Toast.makeText(ForgotPasswordActivity.this,
-                                    "Password reset link sent to " + email,
-                                    Toast.LENGTH_SHORT).show();
-                            // Optionally navigate back to login
-                            Intent intent = new Intent(ForgotPasswordActivity.this, LoginActivity.class);
-                            startActivity(intent);
-                            finish();
-                        } else {
-                            Toast.makeText(ForgotPasswordActivity.this,
-                                    "Failed to send reset email: " + task.getException().getMessage(),
-                                    Toast.LENGTH_SHORT).show();
-                            resetButtonState();
-                        }
+            .addOnCompleteListener(new OnCompleteListener<Void>() {
+                @Override
+                public void onComplete(@NonNull Task<Void> task) {
+                    if (task.isSuccessful()) {
+                        Toast.makeText(ForgotPasswordActivity.this,
+                                 R.string.email_sent_to + email,
+                                Toast.LENGTH_SHORT).show();
+                        // Optionally navigate back to login
+                        Intent intent = new Intent(ForgotPasswordActivity.this, LoginActivity.class);
+                        startActivity(intent);
+                        finish();
+                    } else {
+                        Toast.makeText(ForgotPasswordActivity.this,
+                                R.string.email_sent_failed + task.getException().getMessage(),
+                                Toast.LENGTH_SHORT).show();
+                        resetButtonState();
                     }
-                });
+                }
+            });
     }
 
+    // Reset the button state after an operation
     private void resetButtonState() {
-        requestOtpButton.setEnabled(true);
-        requestOtpButton.setText("Request Reset Link");
+        requestLinkButton.setEnabled(true);
+        requestLinkButton.setText(R.string.request_link);
     }
 }
