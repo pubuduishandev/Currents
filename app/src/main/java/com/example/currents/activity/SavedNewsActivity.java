@@ -8,6 +8,9 @@ import android.util.Log;
 import android.view.Menu;
 import android.view.MenuInflater;
 import android.view.MenuItem;
+import android.view.View;
+import android.widget.HorizontalScrollView;
+import android.widget.LinearLayout;
 import android.widget.Toast;
 
 import androidx.annotation.NonNull;
@@ -45,23 +48,26 @@ public class SavedNewsActivity extends AppCompatActivity implements NewsAdapter.
     private static final String TAG = "SavedNewsActivity";
 
     private Toolbar toolbar;
+    private HorizontalScrollView chipScrollView;
     private ChipGroup categoryChipGroup;
     private RecyclerView savedNewsRecyclerView;
+    private LinearLayout noSavedNewsLayout;
     private NewsAdapter newsAdapter;
     private List<NewsItem> allNewsItems;
 
     private FirebaseFirestore db;
     private FirebaseAuth mAuth;
 
+    private boolean hasSavedNews = false; // Flag to track if there's any saved news
+
     private static final String PREF_NAME = "CurrentUserPrefs";
     private static final String KEY_USER_UID = "user_uid";
 
-    // Re-use constants from HomeActivity for consistency when passing data
-    public static final String EXTRA_ARTICLE_ID = "extra_article_id"; // Added for article ID
+    public static final String EXTRA_ARTICLE_ID = "extra_article_id";
     public static final String EXTRA_NEWS_TITLE = "extra_news_title";
     public static final String EXTRA_NEWS_DATE = "extra_news_date";
     public static final String EXTRA_NEWS_IMAGE_RES_ID = "extra_news_image_res_id";
-    public static final String EXTRA_NEWS_IMAGE_URL = "extra_news_image_url"; // NEW: Constant for image URL
+    public static final String EXTRA_NEWS_IMAGE_URL = "extra_news_image_url";
     public static final String EXTRA_NEWS_CONTENT = "extra_news_content";
 
 
@@ -81,8 +87,10 @@ public class SavedNewsActivity extends AppCompatActivity implements NewsAdapter.
             getSupportActionBar().setDisplayShowHomeEnabled(true);
         }
 
+        chipScrollView = findViewById(R.id.chipScrollView);
         categoryChipGroup = findViewById(R.id.categoryChipGroup);
         savedNewsRecyclerView = findViewById(R.id.savedNewsRecyclerView);
+        noSavedNewsLayout = findViewById(R.id.noSavedNewsLayout);
 
         allNewsItems = new ArrayList<>();
 
@@ -114,6 +122,16 @@ public class SavedNewsActivity extends AppCompatActivity implements NewsAdapter.
         MenuInflater inflater = getMenuInflater();
         inflater.inflate(R.menu.saved_news_toolbar_menu, menu);
         return true;
+    }
+
+    // This method is called every time the menu is displayed
+    @Override
+    public boolean onPrepareOptionsMenu(Menu menu) {
+        MenuItem clearBookmarksItem = menu.findItem(R.id.action_clear_bookmarks);
+        if (clearBookmarksItem != null) {
+            clearBookmarksItem.setVisible(hasSavedNews); // Set visibility based on the flag
+        }
+        return super.onPrepareOptionsMenu(menu);
     }
 
     @Override
@@ -150,6 +168,12 @@ public class SavedNewsActivity extends AppCompatActivity implements NewsAdapter.
             Toast.makeText(this, "Please log in to see your saved articles.", Toast.LENGTH_SHORT).show();
             allNewsItems.clear();
             newsAdapter.setNewsList(allNewsItems);
+            // Update flag and UI visibility
+            hasSavedNews = false;
+            chipScrollView.setVisibility(View.GONE);
+            savedNewsRecyclerView.setVisibility(View.GONE);
+            noSavedNewsLayout.setVisibility(View.VISIBLE);
+            invalidateOptionsMenu(); // Invalidate to update menu visibility
             return;
         }
 
@@ -172,9 +196,19 @@ public class SavedNewsActivity extends AppCompatActivity implements NewsAdapter.
                             Log.d(TAG, "No bookmarks found for user: " + currentUserId);
                             allNewsItems.clear();
                             newsAdapter.setNewsList(allNewsItems);
-                            Toast.makeText(SavedNewsActivity.this, "No saved articles found.", Toast.LENGTH_SHORT).show();
+                            hasSavedNews = false;
+                            chipScrollView.setVisibility(View.GONE);
+                            savedNewsRecyclerView.setVisibility(View.GONE);
+                            noSavedNewsLayout.setVisibility(View.VISIBLE);
+                            invalidateOptionsMenu(); // Invalidate to update menu visibility
                             return;
                         }
+
+                        // If bookmarks are found, hide the "No saved news" layout and show chips/recycler
+                        chipScrollView.setVisibility(View.VISIBLE);
+                        savedNewsRecyclerView.setVisibility(View.VISIBLE);
+                        noSavedNewsLayout.setVisibility(View.GONE);
+
 
                         List<String> finalArticleIds = new ArrayList<>(bookmarkedArticleIds);
                         // Firestore's whereIn clause has a limit of 10. If a user has more, you need to chunk the list.
@@ -199,13 +233,11 @@ public class SavedNewsActivity extends AppCompatActivity implements NewsAdapter.
                                                 String content = document.getString("content");
                                                 Timestamp timestamp = document.getTimestamp("createdAt");
                                                 String postedDate = (timestamp != null) ? sdf.format(timestamp.toDate()) : "Unknown Date";
-                                                String imageUrl = document.getString("imageUrl"); // NEW: Get imageUrl from Firestore
+                                                String imageUrl = document.getString("imageUrl");
 
-                                                // Default placeholder if no specific image is found/provided
-                                                int imageResId = R.drawable.news_placeholder;
+                                                int imageResId = R.drawable.news_placeholder; // Default placeholder
 
                                                 if (title != null && category != null && content != null) {
-                                                    // Pass imageUrl to the NewsItem constructor
                                                     fetchedBookmarkedNews.add(new NewsItem(articleId, title, postedDate, imageResId, category, content, imageUrl));
                                                 } else {
                                                     Log.w(TAG, "Skipping bookmarked article with missing fields: " + document.getId());
@@ -218,18 +250,37 @@ public class SavedNewsActivity extends AppCompatActivity implements NewsAdapter.
                                         allNewsItems.addAll(fetchedBookmarkedNews);
                                         Log.d(TAG, "Fetched " + allNewsItems.size() + " bookmarked news items.");
 
-                                        Chip selectedChip = findViewById(categoryChipGroup.getCheckedChipIds().get(0));
+                                        Chip selectedChip = findViewById(categoryChipGroup.getCheckedChipIds().isEmpty() ? R.id.chipAll : categoryChipGroup.getCheckedChipIds().get(0));
                                         if (selectedChip != null) {
                                             filterNewsByCategory(selectedChip.getText().toString());
                                         } else {
                                             filterNewsByCategory("All");
                                         }
 
+                                        // After fetching and updating the list, check if it's still empty
+                                        hasSavedNews = !allNewsItems.isEmpty(); // Update the flag
+                                        if (!hasSavedNews) { // If still no saved news after fetching articles
+                                            chipScrollView.setVisibility(View.GONE);
+                                            savedNewsRecyclerView.setVisibility(View.GONE);
+                                            noSavedNewsLayout.setVisibility(View.VISIBLE);
+                                        } else {
+                                            chipScrollView.setVisibility(View.VISIBLE);
+                                            savedNewsRecyclerView.setVisibility(View.VISIBLE);
+                                            noSavedNewsLayout.setVisibility(View.GONE);
+                                        }
+                                        invalidateOptionsMenu(); // Invalidate to update menu visibility
+
                                     } else {
                                         Log.e(TAG, "Error getting bookmarked articles: ", articleTask.getException());
                                         Toast.makeText(SavedNewsActivity.this, "Failed to load saved articles.", Toast.LENGTH_SHORT).show();
                                         allNewsItems.clear();
                                         newsAdapter.setNewsList(allNewsItems);
+                                        // On error, revert to "No saved news" state and update flag
+                                        hasSavedNews = false;
+                                        chipScrollView.setVisibility(View.GONE);
+                                        savedNewsRecyclerView.setVisibility(View.GONE);
+                                        noSavedNewsLayout.setVisibility(View.VISIBLE);
+                                        invalidateOptionsMenu(); // Invalidate to update menu visibility
                                     }
                                 });
 
@@ -238,6 +289,12 @@ public class SavedNewsActivity extends AppCompatActivity implements NewsAdapter.
                         Toast.makeText(SavedNewsActivity.this, "Failed to load bookmarks.", Toast.LENGTH_SHORT).show();
                         allNewsItems.clear();
                         newsAdapter.setNewsList(allNewsItems);
+                        // On error, revert to "No saved news" state and update flag
+                        hasSavedNews = false;
+                        chipScrollView.setVisibility(View.GONE);
+                        savedNewsRecyclerView.setVisibility(View.GONE);
+                        noSavedNewsLayout.setVisibility(View.VISIBLE);
+                        invalidateOptionsMenu(); // Invalidate to update menu visibility
                     }
                 });
     }
@@ -283,6 +340,12 @@ public class SavedNewsActivity extends AppCompatActivity implements NewsAdapter.
                                         allChip.setChecked(true);
                                     }
                                     Log.d(TAG, "Successfully cleared all bookmarks for user: " + currentUserId);
+                                    // After clearing, show "No saved news" layout and hide chips/recycler
+                                    hasSavedNews = false; // No more saved news
+                                    chipScrollView.setVisibility(View.GONE);
+                                    savedNewsRecyclerView.setVisibility(View.GONE);
+                                    noSavedNewsLayout.setVisibility(View.VISIBLE);
+                                    invalidateOptionsMenu(); // Invalidate to update menu visibility
                                 })
                                 .addOnFailureListener(e -> {
                                     Toast.makeText(SavedNewsActivity.this, "Failed to clear saved articles: " + e.getMessage(), Toast.LENGTH_LONG).show();
@@ -301,11 +364,11 @@ public class SavedNewsActivity extends AppCompatActivity implements NewsAdapter.
     public void onNewsClick(NewsItem newsItem) {
         // Start ReadNewsActivity and pass news data
         Intent intent = new Intent(SavedNewsActivity.this, ReadNewsActivity.class);
-        intent.putExtra(EXTRA_ARTICLE_ID, newsItem.getId()); // Pass the article ID
+        intent.putExtra(EXTRA_ARTICLE_ID, newsItem.getId());
         intent.putExtra(EXTRA_NEWS_TITLE, newsItem.getTitle());
         intent.putExtra(EXTRA_NEWS_DATE, newsItem.getPostedDate());
-        intent.putExtra(EXTRA_NEWS_IMAGE_RES_ID, newsItem.getImageResId()); // Pass resource ID as fallback
-        intent.putExtra(EXTRA_NEWS_IMAGE_URL, newsItem.getImageUrl()); // NEW: Pass the imageUrl
+        intent.putExtra(EXTRA_NEWS_IMAGE_RES_ID, newsItem.getImageResId());
+        intent.putExtra(EXTRA_NEWS_IMAGE_URL, newsItem.getImageUrl());
         intent.putExtra(EXTRA_NEWS_CONTENT, newsItem.getContent());
         startActivity(intent);
     }
@@ -324,6 +387,28 @@ public class SavedNewsActivity extends AppCompatActivity implements NewsAdapter.
             }
         }
         newsAdapter.setNewsList(filteredList);
+
+        // This method also needs to ensure the UI visibility is correct,
+        // especially if filtering results in an empty list, but the allNewsItems might not be empty.
+        // The hasSavedNews flag should primarily be controlled by fetchBookmarkedNews() and clearAllBookmarksForCurrentUser().
+        // Here, we just ensure the filtered view is correct.
+        if (filteredList.isEmpty() && hasSavedNews) { // If filtered list is empty but there ARE saved news in other categories
+            // We might want to show a "No news in this category" message instead of the main "No saved news"
+            // For now, let's stick to the overall state
+            chipScrollView.setVisibility(View.VISIBLE); // Chips should still be visible to change category
+            savedNewsRecyclerView.setVisibility(View.GONE);
+            noSavedNewsLayout.setVisibility(View.VISIBLE); // Show the "No news" message if filtered list is empty
+            // You might want a different message here, e.g., "No saved news in this category"
+            // For simplicity, we are reusing the same layout.
+        } else if (filteredList.isEmpty() && !hasSavedNews) { // No saved news at all
+            chipScrollView.setVisibility(View.GONE);
+            savedNewsRecyclerView.setVisibility(View.GONE);
+            noSavedNewsLayout.setVisibility(View.VISIBLE);
+        } else { // Has saved news and filtered list is not empty
+            chipScrollView.setVisibility(View.VISIBLE);
+            savedNewsRecyclerView.setVisibility(View.VISIBLE);
+            noSavedNewsLayout.setVisibility(View.GONE);
+        }
     }
 
     @Override

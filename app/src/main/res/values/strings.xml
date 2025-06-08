@@ -1,4 +1,4 @@
-<resources>
+<resources xmlns:tools="http://schemas.android.com/tools">
     <string name="app_name">Currents</string>
     <string name="developer_concept">Concept &amp; Developed by</string>
     <string name="developer_dept">Department of ICT</string>
@@ -20,8 +20,8 @@
     <string name="username_hint">Username</string>
     <string name="confirm_password_hint">Confirm Password</string>
     <string name="already_have_account">Already have an account?</string>
-    <string name="signup_success">Sign Up Successful</string>
-    <string name="signup_success_message">You have successfully signed up. Please log in to continue.</string>
+    <string name="create_account_title">Create Account</string>
+    <string name="create_account_message">Are you sure want to create account now?</string>
     <string name="forgot_password_title">Forgot Password</string>
     <string name="forgot_password_instructions">Please enter your email address to authenticate</string>
     <string name="request_otp_button">Request OTP</string>
@@ -123,5 +123,6 @@
     <string name="menu_clear_bookmarks">Clear all Bookmarks</string>
     <string name="user_not_registered_title">User Not Registered</string>
     <string name="user_not_registered_message">This email address is not registered. Would you like to create a new account?</string>
-
+    <string name="no_saved_news">No Saved News</string>
+    <string name="no_saved_news_message">Looks like no any saved articles yet.</string>
 </resources>
