@@ -22,7 +22,7 @@
         app:layout_constraintTop_toTopOf="parent"
         app:navigationIcon="@drawable/search"
         app:strokeColor="@android:color/transparent"
-        app:menu="@menu/searchbar_menu"/>
+        app:menu="@menu/searchbar_menu" />
 
     <androidx.recyclerview.widget.RecyclerView
         android:id="@+id/horizontalCardRecyclerView"
