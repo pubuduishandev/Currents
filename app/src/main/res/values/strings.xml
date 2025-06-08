@@ -152,4 +152,8 @@
     <string name="error_fetching_profile">Error fetching user profile: </string>
     <string name="something_went_wrong">Something went wrong</string>
     <string name="user_not_registered">User not registered</string>
+    <string name="sign_up_success">Account created! Verification email sent to </string>
+    <string name="sign_up_error">Account creation failed</string>
+    <string name="creating_account">Creating Account...</string>
+    <string name="no_user_found">No user logged in to delete</string>
 </resources>

@@ -17,14 +17,13 @@ import androidx.annotation.NonNull;
 import androidx.appcompat.app.AppCompatActivity;
 
 import com.example.currents.R;
+
 import com.google.android.gms.tasks.OnCompleteListener;
 import com.google.android.gms.tasks.Task;
 import com.google.android.material.dialog.MaterialAlertDialogBuilder;
 import com.google.android.material.button.MaterialButton;
 import com.google.android.material.textfield.TextInputEditText;
 import com.google.android.material.textfield.TextInputLayout;
-
-// Firebase Imports
 import com.google.firebase.auth.AuthResult;
 import com.google.firebase.auth.FirebaseAuth;
 import com.google.firebase.auth.FirebaseAuthInvalidCredentialsException;
@@ -32,17 +31,17 @@ import com.google.firebase.auth.FirebaseAuthUserCollisionException;
 import com.google.firebase.auth.FirebaseAuthWeakPasswordException;
 import com.google.firebase.auth.FirebaseUser;
 import com.google.firebase.firestore.FirebaseFirestore;
-import com.google.firebase.firestore.FieldValue; // For server timestamps
-import com.google.firebase.firestore.QuerySnapshot; // For username check
+import com.google.firebase.firestore.FieldValue;
+import com.google.firebase.firestore.QuerySnapshot;
 
 import java.util.HashMap;
 import java.util.Map;
 
 public class SignupActivity extends AppCompatActivity {
-
+    // Tag for logging
     private static final String TAG = "SignupActivity";
 
-    // UI elements
+    // UI components
     private TextInputEditText firstNameEditText;
     private TextInputEditText lastNameEditText;
     private TextInputEditText userNameEditText;
@@ -74,6 +73,7 @@ public class SignupActivity extends AppCompatActivity {
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
+        // Call the superclass method
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_signup);
 
@@ -99,14 +99,13 @@ public class SignupActivity extends AppCompatActivity {
         passwordInputLayout = findViewById(R.id.password_input_layout);
         confirmPasswordInputLayout = findViewById(R.id.confirm_password_input_layout);
 
-        // --- Add TextWatchers to clear errors as user types ---
+        // Add TextWatchers to clear errors as user types
         firstNameEditText.addTextChangedListener(new GenericTextWatcher(firstNameInputLayout));
         lastNameEditText.addTextChangedListener(new GenericTextWatcher(lastNameInputLayout));
         userNameEditText.addTextChangedListener(new GenericTextWatcher(userNameInputLayout));
         emailEditText.addTextChangedListener(new GenericTextWatcher(emailInputLayout));
         passwordEditText.addTextChangedListener(new GenericTextWatcher(passwordInputLayout));
         confirmPasswordEditText.addTextChangedListener(new GenericTextWatcher(confirmPasswordInputLayout));
-        // --- End TextWatchers ---
 
         // Set OnClickListener for the Sign Up Button
         signupButton.setOnClickListener(new View.OnClickListener() {
@@ -125,10 +124,7 @@ public class SignupActivity extends AppCompatActivity {
         });
     }
 
-    /**
-     * Helper class for TextWatcher to avoid repetitive code for each field.
-     * Clears error when text changes.
-     */
+    // Helper class for TextWatcher to avoid repetitive code for each field. Clears error when text changes.
     private class GenericTextWatcher implements TextWatcher {
         private final TextInputLayout textInputLayout;
 
@@ -151,12 +147,7 @@ public class SignupActivity extends AppCompatActivity {
         public void afterTextChanged(Editable s) {}
     }
 
-
-    /**
-     * Attempts to sign up the account specified by the signup form.
-     * If there are form errors (invalid email, missing fields, etc.), the
-     * errors are presented and no actual signup attempt is made.
-     */
+    // This method validates the input fields, checks for username uniqueness,
     private void attemptSignup() {
         // Reset errors
         resetInputLayoutErrors();
@@ -172,7 +163,7 @@ public class SignupActivity extends AppCompatActivity {
         boolean cancel = false;
         View focusView = null;
 
-        // 1. All fields are filled & other validations
+        // All fields are filled & other validations
         // Order of validation for focus control: from bottom to top of the form, generally
 
         // Check for Confirm Password (5. password and confirm password matched)
@@ -248,12 +239,12 @@ public class SignupActivity extends AppCompatActivity {
             if (focusView != null) {
                 focusView.requestFocus();
             }
-            Toast.makeText(SignupActivity.this, "Please fix the errors to sign up", Toast.LENGTH_SHORT).show();
         } else {
             showCreateAccountConfirmationDialog();
         }
     }
 
+    // Resets all input layout errors to null and disables error state
     private void resetInputLayoutErrors() {
         firstNameInputLayout.setError(null);
         lastNameInputLayout.setError(null);
@@ -270,93 +261,96 @@ public class SignupActivity extends AppCompatActivity {
         confirmPasswordInputLayout.setErrorEnabled(false);
     }
 
+    // Checks if the username is unique in firestore and creates the user in Firebase Auth if it is.
     private void checkUsernameAndCreateUser(String firstName, String lastName, String username, String email, String password) {
         db.collection("users")
-                .whereEqualTo("username", username)
-                .limit(1) // Assuming usernames are unique
-                .get()
-                .addOnCompleteListener(new OnCompleteListener<QuerySnapshot>() {
-                    @Override
-                    public void onComplete(@NonNull Task<QuerySnapshot> task) {
-                        if (task.isSuccessful()) {
-                            if (task.getResult() != null && !task.getResult().isEmpty()) {
-                                // Username already exists
-                                userNameInputLayout.setError("Username already taken. Please choose another.");
-                                userNameInputLayout.setErrorEnabled(true);
-                                userNameEditText.requestFocus();
-                                Toast.makeText(SignupActivity.this, "Username already exists.", Toast.LENGTH_SHORT).show();
-                                resetSignupForm(); // Re-enable button etc.
-                                Log.d(TAG, "Username '" + username + "' already taken.");
-                            } else {
-                                // Username is available, proceed to create user with Firebase Auth
-                                Log.d(TAG, "Username '" + username + "' is available. Proceeding with Auth creation.");
-                                createUserWithFirebaseAuth(firstName, lastName, username, email, password);
-                            }
+            .whereEqualTo("username", username)
+            .limit(1) // Assuming usernames are unique
+            .get()
+            .addOnCompleteListener(new OnCompleteListener<QuerySnapshot>() {
+                @Override
+                public void onComplete(@NonNull Task<QuerySnapshot> task) {
+                    if (task.isSuccessful()) {
+                        if (task.getResult() != null && !task.getResult().isEmpty()) {
+                            // Username already exists
+                            userNameInputLayout.setError("Username already taken. Please choose another.");
+                            userNameInputLayout.setErrorEnabled(true);
+                            userNameEditText.requestFocus();
+                            Toast.makeText(SignupActivity.this, "Username already exists.", Toast.LENGTH_SHORT).show();
+                            resetSignupForm(); // Re-enable button etc.
+                            Log.d(TAG, "Username '" + username + "' already taken.");
                         } else {
-                            // Error checking username uniqueness
-                            Toast.makeText(SignupActivity.this, "Error checking username: " + task.getException().getMessage(),
-                                    Toast.LENGTH_LONG).show();
-                            Log.e(TAG, "Error checking username uniqueness", task.getException());
-                            resetSignupForm();
+                            // Username is available, proceed to create user with Firebase Auth
+                            Log.d(TAG, "Username '" + username + "' is available. Proceeding with Auth creation.");
+                            createUserWithFirebaseAuth(firstName, lastName, username, email, password);
                         }
+                    } else {
+                        // Error checking username uniqueness
+                        Toast.makeText(SignupActivity.this, "Error checking username: " + task.getException().getMessage(),
+                                Toast.LENGTH_LONG).show();
+                        Log.e(TAG, "Error checking username uniqueness", task.getException());
+                        resetSignupForm();
                     }
-                });
+                }
+            });
     }
 
+    // Creates a new user in Firebase Auth and saves their data to firestore.
     private void createUserWithFirebaseAuth(String firstName, String lastName, String username, String email, String password) {
         mAuth.createUserWithEmailAndPassword(email, password)
-                .addOnCompleteListener(this, new OnCompleteListener<AuthResult>() {
-                    @Override
-                    public void onComplete(@NonNull Task<AuthResult> task) {
-                        if (task.isSuccessful()) {
-                            // User created successfully in Firebase Auth
-                            FirebaseUser user = mAuth.getCurrentUser();
-                            if (user != null) {
-                                Log.d(TAG, "Firebase Auth user created: " + user.getUid());
+            .addOnCompleteListener(this, new OnCompleteListener<AuthResult>() {
+                @Override
+                public void onComplete(@NonNull Task<AuthResult> task) {
+                    if (task.isSuccessful()) {
+                        // User created successfully in Firebase Auth
+                        FirebaseUser user = mAuth.getCurrentUser();
+                        if (user != null) {
+                            Log.d(TAG, "Firebase Auth user created: " + user.getUid());
 
-                                // Store user data in Firestore
-                                saveUserDataToFirestore(user, firstName, lastName, username, email);
+                            // Store user data in firestore
+                            saveUserDataToFirestore(user, firstName, lastName, username, email);
 
-                            } else {
-                                Log.e(TAG, "Firebase Auth user creation successful, but currentUser is null.");
-                                Toast.makeText(SignupActivity.this, "Signup failed: Internal error.",
-                                        Toast.LENGTH_LONG).show();
-                                resetSignupForm();
-                            }
                         } else {
-                            // If sign up fails, display a message to the user.
-                            resetSignupForm(); // Re-enable button etc.
-                            String errorMessage = "Signup failed.";
-                            Exception exception = task.getException();
-
-                            if (exception instanceof FirebaseAuthWeakPasswordException) {
-                                errorMessage = "Password is too weak. Please use a stronger password.";
-                                passwordInputLayout.setError(errorMessage);
-                                passwordInputLayout.setErrorEnabled(true);
-                                passwordEditText.requestFocus();
-                            } else if (exception instanceof FirebaseAuthInvalidCredentialsException) {
-                                errorMessage = "Invalid email format. Please check your email.";
-                                emailInputLayout.setError(errorMessage);
-                                emailInputLayout.setErrorEnabled(true);
-                                emailEditText.requestFocus();
-                            } else if (exception instanceof FirebaseAuthUserCollisionException) {
-                                errorMessage = "This email is already registered. Please sign in or use a different email.";
-                                emailInputLayout.setError(errorMessage);
-                                emailInputLayout.setErrorEnabled(true);
-                                emailEditText.requestFocus();
-                            } else {
-                                errorMessage = "Signup failed: " + (exception != null ? exception.getMessage() : "Unknown error");
-                                Log.e(TAG, "Firebase Auth signup failed: " + errorMessage, exception);
-                            }
-                            Toast.makeText(SignupActivity.this, errorMessage, Toast.LENGTH_LONG).show();
+                            Log.e(TAG, "Firebase Auth user creation successful, but currentUser is null.");
+                            Toast.makeText(SignupActivity.this, R.string.something_went_wrong,
+                                    Toast.LENGTH_LONG).show();
+                            resetSignupForm();
                         }
+                    } else {
+                        // If sign up fails, display a message to the user.
+                        resetSignupForm(); // Re-enable button etc.
+                        String errorMessage = "Signup failed.";
+                        Exception exception = task.getException();
+
+                        if (exception instanceof FirebaseAuthWeakPasswordException) {
+                            errorMessage = "Password is too weak. Please use a stronger password.";
+                            passwordInputLayout.setError(errorMessage);
+                            passwordInputLayout.setErrorEnabled(true);
+                            passwordEditText.requestFocus();
+                        } else if (exception instanceof FirebaseAuthInvalidCredentialsException) {
+                            errorMessage = "Invalid email format. Please check your email.";
+                            emailInputLayout.setError(errorMessage);
+                            emailInputLayout.setErrorEnabled(true);
+                            emailEditText.requestFocus();
+                        } else if (exception instanceof FirebaseAuthUserCollisionException) {
+                            errorMessage = "This email is already registered. Please sign in or use a different email.";
+                            emailInputLayout.setError(errorMessage);
+                            emailInputLayout.setErrorEnabled(true);
+                            emailEditText.requestFocus();
+                        } else {
+                            errorMessage = "Signup failed: " + (exception != null ? exception.getMessage() : "Unknown error");
+                            Log.e(TAG, "Firebase Auth signup failed: " + errorMessage, exception);
+                        }
+                        Toast.makeText(SignupActivity.this, errorMessage, Toast.LENGTH_LONG).show();
                     }
-                });
+                }
+            });
     }
 
+    // Saves the user data to Firestore under the "users" collection.
     private void saveUserDataToFirestore(FirebaseUser user, String firstName, String lastName, String username, String email) {
         // Capture the current timestamp for fields like lastPasswordChange, createdAt etc.
-        // This will be stored in Firestore as a Server Timestamp, and we can use current device time for SharedPreferences
+        // This will be stored in firestore as a Server Timestamp, and we can use current device time for SharedPreferences
         long currentTimestampMillis = System.currentTimeMillis();
 
         Map<String, Object> userData = new HashMap<>();
@@ -367,101 +361,94 @@ public class SignupActivity extends AppCompatActivity {
         userData.put("createdAt", FieldValue.serverTimestamp());
         userData.put("updatedAt", FieldValue.serverTimestamp());
 
-        // Store data in Firestore using the user's UID as the document ID
+        // Store data in firestore using the user's UID as the document ID
         db.collection("users").document(user.getUid())
-                .set(userData)
-                .addOnSuccessListener(aVoid -> {
-                    Log.d(TAG, "User data successfully saved to Firestore for UID: " + user.getUid());
+            .set(userData)
+            .addOnSuccessListener(aVoid -> {
+                Log.d(TAG, "User data successfully saved to firestore for UID: " + user.getUid());
 
-                    // --- Send Email Verification ---
-                    user.sendEmailVerification()
-                            .addOnCompleteListener(new OnCompleteListener<Void>() {
-                                @Override
-                                public void onComplete(@NonNull Task<Void> task) {
-                                    if (task.isSuccessful()) {
-                                        Log.d(TAG, "Verification email sent to " + user.getEmail());
-                                        Toast.makeText(SignupActivity.this,
-                                                "Account created! Please check your email for a verification link.",
-                                                Toast.LENGTH_LONG).show();
-                                    } else {
-                                        Log.e(TAG, "Failed to send verification email.", task.getException());
-                                        Toast.makeText(SignupActivity.this,
-                                                "Account created, but failed to send verification email. Please check your spam folder or try verifying later.",
-                                                Toast.LENGTH_LONG).show();
-                                    }
-                                    // --- Navigate to HomeActivity directly after email verification attempt ---
-                                    navigateToHome();
-                                }
-                            });
-                })
-                .addOnFailureListener(e -> {
-                    // If Firestore save fails, delete the user from Firebase Auth to avoid inconsistencies
-                    Log.e(TAG, "Error saving user data to Firestore for UID: " + user.getUid(), e);
-                    user.delete()
-                            .addOnCompleteListener(deleteTask -> {
-                                if (deleteTask.isSuccessful()) {
-                                    Log.d(TAG, "User deleted from Firebase Auth due to Firestore save failure.");
-                                    Toast.makeText(SignupActivity.this, "Account creation failed due to database error. Please try again.",
-                                            Toast.LENGTH_LONG).show();
-                                } else {
-                                    Log.e(TAG, "Failed to delete user from Auth after Firestore save failure.", deleteTask.getException());
-                                    Toast.makeText(SignupActivity.this, "Account created, but a database error occurred.",
-                                            Toast.LENGTH_LONG).show();
-                                }
-                                resetSignupForm();
-                            });
-                });
+                // Send Email Verification
+                user.sendEmailVerification()
+                    .addOnCompleteListener(new OnCompleteListener<Void>() {
+                        @Override
+                        public void onComplete(@NonNull Task<Void> task) {
+                            if (task.isSuccessful()) {
+                                Log.d(TAG, "Verification email sent to " + user.getEmail());
+                                Toast.makeText(SignupActivity.this,
+                                        R.string.sign_up_success + user.getEmail(),
+                                        Toast.LENGTH_LONG).show();
+                            } else {
+                                Log.e(TAG, "Failed to send verification email.", task.getException());
+                                Toast.makeText(SignupActivity.this,
+                                        R.string.sign_up_success,
+                                        Toast.LENGTH_LONG).show();
+                            }
+                            // Navigate to HomeActivity directly after email verification attempt
+                            navigateToHome();
+                        }
+                    });
+            })
+            .addOnFailureListener(e -> {
+                // If firestore save fails, delete the user from Firebase Auth to avoid inconsistencies
+                Log.e(TAG, "Error saving user data to firestore for UID: " + user.getUid(), e);
+                user.delete()
+                    .addOnCompleteListener(deleteTask -> {
+                        if (deleteTask.isSuccessful()) {
+                            Log.d(TAG, "User deleted from Firebase Auth due to firestore save failure.");
+                            Toast.makeText(SignupActivity.this, R.string.sign_up_error,
+                                    Toast.LENGTH_LONG).show();
+                        } else {
+                            Log.e(TAG, "Failed to delete user from Auth after firestore save failure.", deleteTask.getException());
+                            Toast.makeText(SignupActivity.this, R.string.something_went_wrong,
+                                    Toast.LENGTH_LONG).show();
+                        }
+                        resetSignupForm();
+                    });
+            });
     }
 
+    // Displays a confirmation dialog before creating the account.
     private void showCreateAccountConfirmationDialog() {
         new MaterialAlertDialogBuilder(this)
-                .setTitle(R.string.create_account_title)
-                .setMessage(R.string.create_account_message)
-                .setPositiveButton(R.string.yes, (dialog, which) -> {
-                    // Store values at the time of the signup attempt.
-                    String firstName = firstNameEditText.getText().toString().trim();
-                    String lastName = lastNameEditText.getText().toString().trim();
-                    String username = userNameEditText.getText().toString().trim();
-                    String email = emailEditText.getText().toString().trim();
-                    String password = passwordEditText.getText().toString().trim();
+            .setTitle(R.string.create_account_title)
+            .setMessage(R.string.create_account_message)
+            .setPositiveButton(R.string.yes, (dialog, which) -> {
+                // Store values at the time of the signup attempt.
+                String firstName = firstNameEditText.getText().toString().trim();
+                String lastName = lastNameEditText.getText().toString().trim();
+                String username = userNameEditText.getText().toString().trim();
+                String email = emailEditText.getText().toString().trim();
+                String password = passwordEditText.getText().toString().trim();
 
-                    // All client-side validations passed. Proceed with Firebase checks.
-                    signupButton.setEnabled(false); // Disable button
-                    signupButton.setText("Creating Account..."); // Provide feedback
+                // All client-side validations passed. Proceed with Firebase checks.
+                signupButton.setEnabled(false); // Disable button
+                signupButton.setText(R.string.creating_account); // Provide feedback
 
-                    // Check if username is already in use in Firestore
-                    checkUsernameAndCreateUser(firstName, lastName, username, email, password);
-                })
-                .setNegativeButton(R.string.no, (dialog, which) -> {
-                    dialog.dismiss();
-                })
-                .show();
+                // Check if username is already in use in firestore
+                checkUsernameAndCreateUser(firstName, lastName, username, email, password);
+            })
+            .setNegativeButton(R.string.no, (dialog, which) -> {
+                dialog.dismiss();
+            })
+            .show();
     }
 
-    /**
-     * Resets the signup form UI elements (button state).
-     */
+    // Resets the signup form UI elements (button state).
     private void resetSignupForm() {
         signupButton.setEnabled(true);
         signupButton.setText(R.string.sign_up); // Assuming R.string.signup contains "Sign Up"
     }
 
-    /**
-     * Navigates to the LoginActivity.
-     */
+    // Navigates to the LoginActivity.
     private void navigateToLogin() {
         Intent intent = new Intent(SignupActivity.this, LoginActivity.class);
         startActivity(intent);
         finish(); // Finish SignupActivity
     }
 
-    /**
-     * Navigates to the Home Activity (MainActivity placeholder).
-     * This will be the main screen after successful signup.
-     */
+    // This method is called after successful signup and email verification.
     private void navigateToHome() {
-        // --- Store user data in SharedPreferences before navigating ---
-        // This part needs to be done here, as saveUserDataToFirestore's success listener
+        // Store user data in SharedPreferences before navigating
         // now contains the email verification step.
         // We get the data directly from the input fields since we know it's valid at this point.
         String firstName = firstNameEditText.getText().toString().trim();
@@ -484,14 +471,16 @@ public class SignupActivity extends AppCompatActivity {
             Log.d(TAG, "User data saved to SharedPreferences before navigating to Home.");
         } else {
             Log.e(TAG, "User is null when trying to save to SharedPreferences in navigateToHome.");
-            Toast.makeText(this, "Internal error: Could not save local data.", Toast.LENGTH_SHORT).show();
+            Toast.makeText(this, R.string.something_went_wrong, Toast.LENGTH_SHORT).show();
         }
 
-        // --- Actual Navigation ---
+        // Actual Navigation
         Intent intent = new Intent(SignupActivity.this, HomeActivity.class);
         // Clear back stack to prevent going back to signup/login after successful registration
         intent.setFlags(Intent.FLAG_ACTIVITY_NEW_TASK | Intent.FLAG_ACTIVITY_CLEAR_TASK);
         startActivity(intent);
-        finish(); // Finish SignupActivity
+
+        // Finish SignupActivity
+        finish();
     }
 }
