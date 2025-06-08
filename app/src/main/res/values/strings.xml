@@ -147,5 +147,9 @@
     <string name="failed_to_bookmark_remove">Failed to clear saved articles: </string>
     <string name="failed_to_fetch_clear_bookmark">Failed to fetch bookmarks to clear</string>
     <string name="no_news">News not available</string>
-
+    <string name="already_login">Already logged in as </string>
+    <string name="user_not_found">User profile not found</string>
+    <string name="error_fetching_profile">Error fetching user profile: </string>
+    <string name="something_went_wrong">Something went wrong</string>
+    <string name="user_not_registered">User not registered</string>
 </resources>
