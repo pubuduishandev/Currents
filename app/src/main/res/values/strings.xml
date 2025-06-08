@@ -125,4 +125,5 @@
     <string name="user_not_registered_message">This email address is not registered. Would you like to create a new account?</string>
     <string name="no_saved_news">No Saved News</string>
     <string name="no_saved_news_message">Looks like no any saved articles yet.</string>
+    <string name="failed_to_load_bookmarks">Failed to load bookmarks</string>
 </resources>

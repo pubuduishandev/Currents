@@ -1,16 +1,14 @@
 package com.example.currents.activity;
 
-import android.content.Context; // Added for SharedPreferences
+import android.content.Context;
 import android.content.Intent;
-import android.content.SharedPreferences; // Added for SharedPreferences
+import android.content.SharedPreferences;
 import android.os.Bundle;
 import android.util.Log;
-import android.view.View;
 import android.widget.Toast;
 
 import androidx.activity.result.ActivityResultLauncher;
 import androidx.activity.result.contract.ActivityResultContracts;
-import androidx.annotation.NonNull;
 import androidx.appcompat.app.AppCompatActivity;
 import androidx.recyclerview.widget.LinearLayoutManager;
 import androidx.recyclerview.widget.RecyclerView;
@@ -19,42 +17,38 @@ import com.example.currents.R;
 import com.example.currents.adapter.NewsAdapter;
 import com.example.currents.adapter.CarouselNewsAdapter;
 import com.example.currents.model.NewsItem;
+
 import com.google.android.material.search.SearchBar;
 import com.google.android.material.bottomnavigation.BottomNavigationView;
-
-// Firebase Imports
-import com.google.firebase.auth.FirebaseAuth; // Added for FirebaseAuth
-import com.google.firebase.auth.FirebaseUser; // Added for FirebaseUser
+import com.google.firebase.auth.FirebaseAuth;
+import com.google.firebase.auth.FirebaseUser;
 import com.google.firebase.firestore.FirebaseFirestore;
 import com.google.firebase.firestore.QueryDocumentSnapshot;
-import com.google.firebase.firestore.QuerySnapshot;
-import com.google.android.gms.tasks.OnCompleteListener;
-import com.google.android.gms.tasks.Task;
 import com.google.firebase.Timestamp;
-import com.google.firebase.firestore.FieldPath; // Added for whereIn documentId query
-import com.google.firebase.firestore.ListenerRegistration; // Import for ListenerRegistration
+import com.google.firebase.firestore.FieldPath;
+import com.google.firebase.firestore.ListenerRegistration;
 
 import java.text.SimpleDateFormat;
 import java.util.ArrayList;
-import java.util.Date;
 import java.util.List;
 import java.util.Locale;
 import java.util.stream.Collectors;
 
 public class HomeActivity extends AppCompatActivity implements NewsAdapter.OnNewsClickListener {
-
+    // Tag for logging
     private static final String TAG = "HomeActivity";
 
+    // UI components
     private RecyclerView horizontalCardRecyclerView;
     private RecyclerView verticalCardRecyclerView;
     private SearchBar searchBar;
     private BottomNavigationView bottomNavigationView;
-
     private NewsAdapter verticalNewsAdapter;
     private CarouselNewsAdapter horizontalNewsAdapter;
     private List<NewsItem> allNewsItems;
-    private List<NewsItem> bookmarkedNewsItems; // New list for bookmarked articles
+    private List<NewsItem> bookmarkedNewsItems;
 
+    // Constants for passing data between activities
     public static final String EXTRA_ARTICLE_ID = "extra_article_id";
     public static final String EXTRA_NEWS_TITLE = "extra_news_title";
     public static final String EXTRA_NEWS_DATE = "extra_news_date";
@@ -62,52 +56,54 @@ public class HomeActivity extends AppCompatActivity implements NewsAdapter.OnNew
     public static final String EXTRA_NEWS_IMAGE_URL = "extra_news_image_url";
     public static final String EXTRA_NEWS_CONTENT = "extra_news_content";
 
+    // ActivityResultLauncher for SearchViewActivity
     private ActivityResultLauncher<Intent> searchActivityLauncher;
 
-    // Firebase Firestore and Auth instances
+    // Firebase components
     private FirebaseFirestore db;
-    private FirebaseAuth mAuth; // Added FirebaseAuth
+    private FirebaseAuth mAuth;
 
-    // SharedPreferences name and key for User UID (MUST MATCH LoginActivity/ProfileActivity)
+    // SharedPreferences for storing current user ID
     private static final String PREF_NAME = "CurrentUserPrefs";
     private static final String KEY_USER_UID = "user_uid";
 
-    // Listener Registration for Firestore (for real-time updates)
+    // Listener registration for Fire-store real-time updates
     private ListenerRegistration newsListenerRegistration;
-
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
+        // Call the superclass method
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_home);
 
-        // Initialize Firebase Firestore and Auth
+        // Initialize Firebase components
         db = FirebaseFirestore.getInstance();
-        mAuth = FirebaseAuth.getInstance(); // Initialize FirebaseAuth
+        mAuth = FirebaseAuth.getInstance();
 
+        // Initialize UI components
         horizontalCardRecyclerView = findViewById(R.id.horizontalCardRecyclerView);
         verticalCardRecyclerView = findViewById(R.id.verticalCardRecyclerView);
-
         searchBar = findViewById(R.id.searchBar);
         bottomNavigationView = findViewById(R.id.bottomNavigationView);
 
-        allNewsItems = new ArrayList<>(); // Initialize empty list for all news
-        bookmarkedNewsItems = new ArrayList<>(); // Initialize empty list for bookmarked news
+        // Initialize lists for news items
+        allNewsItems = new ArrayList<>();
+        bookmarkedNewsItems = new ArrayList<>();
 
         // Register the ActivityResultLauncher
         searchActivityLauncher = registerForActivityResult(
-                new ActivityResultContracts.StartActivityForResult(),
-                result -> {
-                    if (result.getResultCode() == RESULT_OK) {
-                        Intent data = result.getData();
-                        if (data != null && data.hasExtra(SearchViewActivity.EXTRA_SELECTED_NEWS_ITEM)) {
-                            NewsItem selectedNewsItem = (NewsItem) data.getSerializableExtra(SearchViewActivity.EXTRA_SELECTED_NEWS_ITEM);
-                            if (selectedNewsItem != null) {
-                                onNewsClick(selectedNewsItem);
-                            }
+            new ActivityResultContracts.StartActivityForResult(),
+            result -> {
+                if (result.getResultCode() == RESULT_OK) {
+                    Intent data = result.getData();
+                    if (data != null && data.hasExtra(SearchViewActivity.EXTRA_SELECTED_NEWS_ITEM)) {
+                        NewsItem selectedNewsItem = (NewsItem) data.getSerializableExtra(SearchViewActivity.EXTRA_SELECTED_NEWS_ITEM);
+                        if (selectedNewsItem != null) {
+                            onNewsClick(selectedNewsItem);
                         }
                     }
                 }
+            }
         );
 
         // Set up LinearLayoutManager for horizontal RecyclerView (for bookmarked news)
@@ -120,19 +116,19 @@ public class HomeActivity extends AppCompatActivity implements NewsAdapter.OnNew
         verticalNewsAdapter = new NewsAdapter(new ArrayList<>(), this); // Start with empty list
         verticalCardRecyclerView.setAdapter(verticalNewsAdapter);
 
-        // --- Fetch news items and bookmarks from Firestore ---
+        // Fetch news items and bookmarks from Fire-store
         // Changed to use real-time listener
         setupNewsRealtimeListener();
         fetchBookmarkedNewsFromFirestore(); // Fetch bookmarked news
 
-        // --- SearchBar Click Listener (Now launches SearchViewActivity) ---
+        // SearchBar Click Listener (Now launches SearchViewActivity)
         searchBar.setOnClickListener(v -> {
             Intent intent = new Intent(HomeActivity.this, SearchViewActivity.class);
             intent.putExtra(SearchViewActivity.EXTRA_ALL_NEWS_ITEMS, (ArrayList<NewsItem>) allNewsItems);
             searchActivityLauncher.launch(intent);
         });
 
-        // --- SearchBar Menu Item Clicks (top right menu on SearchBar) ---
+        // SearchBar Menu Item Clicks (top right menu on SearchBar)
         searchBar.setOnMenuItemClickListener(item -> {
             int itemId = item.getItemId();
             if (itemId == R.id.about) {
@@ -147,7 +143,7 @@ public class HomeActivity extends AppCompatActivity implements NewsAdapter.OnNew
             return false;
         });
 
-        // --- BottomNavigationView Logic ---
+        // BottomNavigationView Logic
         bottomNavigationView.setOnItemSelectedListener(item -> {
             int itemId = item.getItemId();
             String category = "";
@@ -168,64 +164,59 @@ public class HomeActivity extends AppCompatActivity implements NewsAdapter.OnNew
         searchBar.setHint(getString(R.string.sports));
     }
 
-    /**
-     * Sets up a real-time listener for the "articles" collection in Firestore.
-     * This method will automatically update `allNewsItems` when changes occur.
-     */
+    // Sets up a real-time listener for the "articles" collection in firestore.
+    // This method will automatically update `allNewsItems` when changes occur.
     private void setupNewsRealtimeListener() {
         if (newsListenerRegistration != null) {
             newsListenerRegistration.remove(); // Remove previous listener if it exists
         }
 
         newsListenerRegistration = db.collection("articles")
-                .addSnapshotListener((snapshots, e) -> {
-                    if (e != null) {
-                        Log.w(TAG, "Listen failed.", e);
-                        Toast.makeText(HomeActivity.this, "Failed to load news updates.", Toast.LENGTH_LONG).show();
-                        return;
-                    }
+            .addSnapshotListener((snapshots, e) -> {
+                if (e != null) {
+                    Log.w(TAG, "Listen failed.", e);
+                    Toast.makeText(HomeActivity.this, "Failed to load news updates.", Toast.LENGTH_LONG).show();
+                    return;
+                }
 
-                    if (snapshots != null) {
-                        List<NewsItem> fetchedNews = new ArrayList<>();
-                        SimpleDateFormat sdf = new SimpleDateFormat("yyyy-MM-dd", Locale.getDefault());
+                if (snapshots != null) {
+                    List<NewsItem> fetchedNews = new ArrayList<>();
+                    SimpleDateFormat sdf = new SimpleDateFormat("yyyy-MM-dd", Locale.getDefault());
 
-                        for (QueryDocumentSnapshot document : snapshots) {
-                            try {
-                                String articleId = document.getId();
-                                String title = document.getString("title");
-                                String category = document.getString("category");
-                                String content = document.getString("content");
-                                Timestamp timestamp = document.getTimestamp("createdAt");
-                                String postedDate = (timestamp != null) ? sdf.format(timestamp.toDate()) : "Unknown Date";
-                                String imageUrl = document.getString("imageUrl");
+                    for (QueryDocumentSnapshot document : snapshots) {
+                        try {
+                            String articleId = document.getId();
+                            String title = document.getString("title");
+                            String category = document.getString("category");
+                            String content = document.getString("content");
+                            Timestamp timestamp = document.getTimestamp("createdAt");
+                            String postedDate = (timestamp != null) ? sdf.format(timestamp.toDate()) : "Unknown Date";
+                            String imageUrl = document.getString("imageUrl");
 
-                                // Default placeholder if imageName or imageUrl is not present
-                                int imageResId = R.drawable.news_placeholder;
+                            // Default placeholder if imageName or imageUrl is not present
+                            int imageResId = R.drawable.news_placeholder;
 
-                                if (title != null && category != null && content != null) {
-                                    fetchedNews.add(new NewsItem(articleId, title, postedDate, imageResId, category, content, imageUrl));
-                                } else {
-                                    Log.w(TAG, "Skipping document with missing fields: " + document.getId());
-                                }
-                            } catch (Exception ex) {
-                                Log.e(TAG, "Error parsing document " + document.getId() + ": " + ex.getMessage(), ex);
+                            if (title != null && category != null && content != null) {
+                                fetchedNews.add(new NewsItem(articleId, title, postedDate, imageResId, category, content, imageUrl));
+                            } else {
+                                Log.w(TAG, "Skipping document with missing fields: " + document.getId());
                             }
+                        } catch (Exception ex) {
+                            Log.e(TAG, "Error parsing document " + document.getId() + ": " + ex.getMessage(), ex);
                         }
-                        allNewsItems.clear();
-                        allNewsItems.addAll(fetchedNews);
-
-                        Log.d(TAG, "Realtime update: Fetched " + allNewsItems.size() + " news items from Firestore.");
-
-                        // After fetching all news, apply initial filter based on selected bottom nav item
-                        filterNewsByCategory(getSelectedCategoryFromBottomNav());
                     }
-                });
+                    allNewsItems.clear();
+                    allNewsItems.addAll(fetchedNews);
+
+                    Log.d(TAG, "Realtime update: Fetched " + allNewsItems.size() + " news items from Firestore.");
+
+                    // After fetching all news, apply initial filter based on selected bottom nav item
+                    filterNewsByCategory(getSelectedCategoryFromBottomNav());
+                }
+            });
     }
 
-
-    /**
-     * Fetches bookmarked news articles for the current user from Firestore.
-     */
+    // Fetches bookmarked news articles for the current user from firestore.
     private void fetchBookmarkedNewsFromFirestore() {
         FirebaseUser currentUser = mAuth.getCurrentUser();
         String userId = null;
@@ -250,86 +241,86 @@ public class HomeActivity extends AppCompatActivity implements NewsAdapter.OnNew
 
         // Step 1: Get article IDs from the "bookmarks" collection for the current user
         db.collection("bookmarks")
-                .whereEqualTo("userId", currentUserId)
-                .get()
-                .addOnCompleteListener(bookmarkTask -> {
-                    if (bookmarkTask.isSuccessful()) {
-                        List<String> bookmarkedArticleIds = new ArrayList<>();
-                        for (QueryDocumentSnapshot document : bookmarkTask.getResult()) {
-                            String articleId = document.getString("articleId");
-                            if (articleId != null) {
-                                bookmarkedArticleIds.add(articleId);
-                            }
+            .whereEqualTo("userId", currentUserId)
+            .get()
+            .addOnCompleteListener(bookmarkTask -> {
+                if (bookmarkTask.isSuccessful()) {
+                    List<String> bookmarkedArticleIds = new ArrayList<>();
+                    for (QueryDocumentSnapshot document : bookmarkTask.getResult()) {
+                        String articleId = document.getString("articleId");
+                        if (articleId != null) {
+                            bookmarkedArticleIds.add(articleId);
                         }
-
-                        if (bookmarkedArticleIds.isEmpty()) {
-                            Log.d(TAG, "No bookmarks found for user: " + currentUserId);
-                            bookmarkedNewsItems.clear();
-                            horizontalNewsAdapter.setNewsList(bookmarkedNewsItems); // Update adapter
-                            return; // No bookmarks, so nothing further to fetch
-                        }
-
-                        // Step 2: Fetch articles from "articles" collection using the gathered article IDs
-                        // Firestore's whereIn clause has a limit of 10. If a user has more, you need to chunk the list.
-                        // For simplicity, we'll handle the first 10 for now.
-                        List<String> finalArticleIds = new ArrayList<>(bookmarkedArticleIds); // Create a mutable copy
-                        if (finalArticleIds.size() > 10) {
-                            Log.w(TAG, "User has more than 10 bookmarks. Only fetching the first 10 due to whereIn limit.");
-                            finalArticleIds = finalArticleIds.subList(0, 10); // Take only the first 10
-                        }
-
-                        db.collection("articles")
-                                .whereIn(FieldPath.documentId(), finalArticleIds) // Query by document ID
-                                .get()
-                                .addOnCompleteListener(articleTask -> {
-                                    if (articleTask.isSuccessful()) {
-                                        List<NewsItem> fetchedBookmarkedNews = new ArrayList<>();
-                                        SimpleDateFormat sdf = new SimpleDateFormat("yyyy-MM-dd", Locale.getDefault());
-
-                                        for (QueryDocumentSnapshot document : articleTask.getResult()) {
-                                            try {
-                                                String articleId = document.getId(); // Get the actual article ID
-                                                String title = document.getString("title");
-                                                String category = document.getString("category");
-                                                String content = document.getString("content");
-                                                Timestamp timestamp = document.getTimestamp("createdAt");
-                                                String postedDate = (timestamp != null) ? sdf.format(timestamp.toDate()) : "Unknown Date";
-                                                String imageUrl = document.getString("imageUrl"); // NEW: Get imageUrl
-
-                                                int imageResId = R.drawable.news_placeholder; // Default placeholder
-
-                                                if (title != null && category != null && content != null) {
-                                                    fetchedBookmarkedNews.add(new NewsItem(articleId, title, postedDate, imageResId, category, content, imageUrl));
-                                                } else {
-                                                    Log.w(TAG, "Skipping bookmarked article with missing fields: " + document.getId());
-                                                }
-                                            } catch (Exception e) {
-                                                Log.e(TAG, "Error parsing bookmarked article document " + document.getId() + ": " + e.getMessage(), e);
-                                            }
-                                        }
-                                        bookmarkedNewsItems.clear();
-                                        bookmarkedNewsItems.addAll(fetchedBookmarkedNews);
-                                        horizontalNewsAdapter.setNewsList(bookmarkedNewsItems); // Update adapter
-                                        Log.d(TAG, "Fetched " + bookmarkedNewsItems.size() + " bookmarked news items.");
-
-                                    } else {
-                                        Log.e(TAG, "Error getting bookmarked articles: ", articleTask.getException());
-                                        Toast.makeText(HomeActivity.this, "Failed to load bookmarked news.", Toast.LENGTH_SHORT).show();
-                                        bookmarkedNewsItems.clear();
-                                        horizontalNewsAdapter.setNewsList(bookmarkedNewsItems); // Clear and update adapter
-                                    }
-                                });
-
-                    } else {
-                        Log.e(TAG, "Error getting bookmark IDs: ", bookmarkTask.getException());
-                        Toast.makeText(HomeActivity.this, "Failed to load bookmarks.", Toast.LENGTH_SHORT).show();
-                        bookmarkedNewsItems.clear();
-                        horizontalNewsAdapter.setNewsList(bookmarkedNewsItems); // Clear and update adapter
                     }
-                });
+
+                    if (bookmarkedArticleIds.isEmpty()) {
+                        Log.d(TAG, "No bookmarks found for user: " + currentUserId);
+                        bookmarkedNewsItems.clear();
+                        horizontalNewsAdapter.setNewsList(bookmarkedNewsItems); // Update adapter
+                        return; // No bookmarks, so nothing further to fetch
+                    }
+
+                    // Step 2: Fetch articles from "articles" collection using the gathered article IDs
+                    // Firestore's whereIn clause has a limit of 10. If a user has more, you need to chunk the list.
+                    // For simplicity, we'll handle the first 10 for now.
+                    List<String> finalArticleIds = new ArrayList<>(bookmarkedArticleIds); // Create a mutable copy
+                    if (finalArticleIds.size() > 10) {
+                        Log.w(TAG, "User has more than 10 bookmarks. Only fetching the first 10 due to whereIn limit.");
+                        finalArticleIds = finalArticleIds.subList(0, 10); // Take only the first 10
+                    }
+
+                    db.collection("articles")
+                            .whereIn(FieldPath.documentId(), finalArticleIds) // Query by document ID
+                            .get()
+                            .addOnCompleteListener(articleTask -> {
+                                if (articleTask.isSuccessful()) {
+                                    List<NewsItem> fetchedBookmarkedNews = new ArrayList<>();
+                                    SimpleDateFormat sdf = new SimpleDateFormat("yyyy-MM-dd", Locale.getDefault());
+
+                                    for (QueryDocumentSnapshot document : articleTask.getResult()) {
+                                        try {
+                                            String articleId = document.getId(); // Get the actual article ID
+                                            String title = document.getString("title");
+                                            String category = document.getString("category");
+                                            String content = document.getString("content");
+                                            Timestamp timestamp = document.getTimestamp("createdAt");
+                                            String postedDate = (timestamp != null) ? sdf.format(timestamp.toDate()) : "Unknown Date";
+                                            String imageUrl = document.getString("imageUrl"); // NEW: Get imageUrl
+
+                                            int imageResId = R.drawable.news_placeholder; // Default placeholder
+
+                                            if (title != null && category != null && content != null) {
+                                                fetchedBookmarkedNews.add(new NewsItem(articleId, title, postedDate, imageResId, category, content, imageUrl));
+                                            } else {
+                                                Log.w(TAG, "Skipping bookmarked article with missing fields: " + document.getId());
+                                            }
+                                        } catch (Exception e) {
+                                            Log.e(TAG, "Error parsing bookmarked article document " + document.getId() + ": " + e.getMessage(), e);
+                                        }
+                                    }
+                                    bookmarkedNewsItems.clear();
+                                    bookmarkedNewsItems.addAll(fetchedBookmarkedNews);
+                                    horizontalNewsAdapter.setNewsList(bookmarkedNewsItems); // Update adapter
+                                    Log.d(TAG, "Fetched " + bookmarkedNewsItems.size() + " bookmarked news items.");
+
+                                } else {
+                                    Log.e(TAG, "Error getting bookmarked articles: ", articleTask.getException());
+                                    Toast.makeText(HomeActivity.this, R.string.failed_to_load_bookmarks, Toast.LENGTH_SHORT).show();
+                                    bookmarkedNewsItems.clear();
+                                    horizontalNewsAdapter.setNewsList(bookmarkedNewsItems); // Clear and update adapter
+                                }
+                            });
+
+                } else {
+                    Log.e(TAG, "Error getting bookmark IDs: ", bookmarkTask.getException());
+                    Toast.makeText(HomeActivity.this, R.string.failed_to_load_bookmarks, Toast.LENGTH_SHORT).show();
+                    bookmarkedNewsItems.clear();
+                    horizontalNewsAdapter.setNewsList(bookmarkedNewsItems); // Clear and update adapter
+                }
+            });
     }
 
-
+    // Handle news item click from the NewsAdapter
     @Override
     public void onNewsClick(NewsItem newsItem) {
         Intent intent = new Intent(HomeActivity.this, ReadNewsActivity.class);
@@ -342,6 +333,7 @@ public class HomeActivity extends AppCompatActivity implements NewsAdapter.OnNew
         startActivity(intent);
     }
 
+    // Filter news items based on the selected category from the bottom navigation
     private void filterNewsByCategory(String category) {
         List<NewsItem> filteredList;
         if (category == null || category.isEmpty()) {
@@ -358,6 +350,7 @@ public class HomeActivity extends AppCompatActivity implements NewsAdapter.OnNew
         verticalNewsAdapter.setNewsList(filteredList);
     }
 
+    // Get the currently selected category from the bottom navigation view
     private String getSelectedCategoryFromBottomNav() {
         int selectedId = bottomNavigationView.getSelectedItemId();
         if (selectedId == R.id.navigation_sports) {
@@ -367,29 +360,28 @@ public class HomeActivity extends AppCompatActivity implements NewsAdapter.OnNew
         } else if (selectedId == R.id.navigation_events) {
             return getString(R.string.events);
         }
-        return getString(R.string.sports); // Default category
+        return getString(R.string.sports);
     }
 
+    // Override onCreateOptionsMenu to inflate the menu (if needed)
     @Override
     protected void onResume() {
         super.onResume();
-        // Re-fetch bookmarks on resume to reflect changes (e.g., if user bookmarks/unbookmarks from ReadNewsActivity)
         fetchBookmarkedNewsFromFirestore();
-        // The main news feed (allNewsItems) is now handled by the real-time listener,
-        // so no need to call fetchNewsFromFirestore() here.
     }
 
+    // Detach the firestore listener to avoid memory leaks
     @Override
     protected void onStop() {
         super.onStop();
-        // Detach the Firestore listener to avoid memory leaks
         if (newsListenerRegistration != null) {
             newsListenerRegistration.remove();
             newsListenerRegistration = null;
-            Log.d(TAG, "Firestore news listener removed.");
+            Log.d(TAG, "firestore news listener removed.");
         }
     }
 
+    // Override onBackPressed to handle back navigation
     @Override
     public void onBackPressed() {
         super.onBackPressed();
