@@ -181,7 +181,7 @@ public class ProfileActivity extends AppCompatActivity implements EditProfileBot
             startActivity(intent);
             return true;
         } else if (id == R.id.action_more) {
-            signOutUser();
+            showSignOutConfirmationDialog();
             return true;
         }
 
@@ -245,6 +245,20 @@ public class ProfileActivity extends AppCompatActivity implements EditProfileBot
         editor.putString(KEY_EMAIL, email);
         editor.putLong(KEY_UPDATED_AT, updatedAtMillis); // NEW: Save updatedAt
         editor.apply();
+    }
+
+    // Method to show a confirmation dialog for signing out
+    private void showSignOutConfirmationDialog() {
+        new MaterialAlertDialogBuilder(this)
+            .setTitle(R.string.sign_out) // Use a string resource for title
+            .setMessage(R.string.sign_out_confirmation_message) // Use a string resource for message
+            .setPositiveButton(R.string.yes, (dialog, which) -> {
+                signOutUser();
+            })
+            .setNegativeButton(R.string.no, (dialog, which) -> {
+                dialog.dismiss();
+            })
+            .show();
     }
 
     // Method to sign out the user
