@@ -375,12 +375,12 @@ public class SignupActivity extends AppCompatActivity {
                             if (task.isSuccessful()) {
                                 Log.d(TAG, "Verification email sent to " + user.getEmail());
                                 Toast.makeText(SignupActivity.this,
-                                        R.string.sign_up_success + user.getEmail(),
+                                        "Account created! Verification email sent to" + user.getEmail(),
                                         Toast.LENGTH_LONG).show();
                             } else {
                                 Log.e(TAG, "Failed to send verification email.", task.getException());
                                 Toast.makeText(SignupActivity.this,
-                                        R.string.sign_up_success,
+                                        "Account created! But failed to send verification email.",
                                         Toast.LENGTH_LONG).show();
                             }
                             // Navigate to HomeActivity directly after email verification attempt
