@@ -32,6 +32,9 @@ import com.google.firebase.firestore.QueryDocumentSnapshot;
 import com.google.firebase.Timestamp;
 import com.google.firebase.firestore.FieldPath;
 import com.google.firebase.firestore.WriteBatch;
+import com.google.android.gms.tasks.Tasks;
+import com.google.android.gms.tasks.Task;
+import com.google.firebase.firestore.QuerySnapshot;
 
 import java.text.SimpleDateFormat;
 import java.util.ArrayList;
@@ -172,143 +175,130 @@ public class SavedNewsActivity extends AppCompatActivity implements NewsAdapter.
         if (userId == null) {
             Log.e(TAG, "No current user ID found. Cannot fetch bookmarks.");
             Toast.makeText(this, R.string.saved_article_error, Toast.LENGTH_SHORT).show();
-            allNewsItems.clear();
-            newsAdapter.setNewsList(allNewsItems);
-
-            // Update flag and UI visibility
-            hasSavedNews = false;
-            chipScrollView.setVisibility(View.GONE);
-            savedNewsRecyclerView.setVisibility(View.GONE);
-            noSavedNewsLayout.setVisibility(View.VISIBLE);
-
-            // Invalidate to update menu visibility
-            invalidateOptionsMenu();
+            updateUIForNoSavedNews(); // Helper to set correct UI state
             return;
         }
 
         final String currentUserId = userId;
 
         db.collection("bookmarks")
-            .whereEqualTo("userId", currentUserId)
-            .get()
-            .addOnCompleteListener(bookmarkTask -> {
-                if (bookmarkTask.isSuccessful()) {
-                    List<String> bookmarkedArticleIds = new ArrayList<>();
-                    for (QueryDocumentSnapshot document : bookmarkTask.getResult()) {
-                        String articleId = document.getString("articleId");
-                        if (articleId != null) {
-                            bookmarkedArticleIds.add(articleId);
-                        }
-                    }
-
-                    if (bookmarkedArticleIds.isEmpty()) {
-                        Log.d(TAG, "No bookmarks found for user: " + currentUserId);
-                        allNewsItems.clear();
-                        newsAdapter.setNewsList(allNewsItems);
-                        hasSavedNews = false;
-                        chipScrollView.setVisibility(View.GONE);
-                        savedNewsRecyclerView.setVisibility(View.GONE);
-                        noSavedNewsLayout.setVisibility(View.VISIBLE);
-                        invalidateOptionsMenu(); // Invalidate to update menu visibility
-                        return;
-                    }
-
-                    // If bookmarks are found, hide the "No saved news" layout and show chips/recycler
-                    chipScrollView.setVisibility(View.VISIBLE);
-                    savedNewsRecyclerView.setVisibility(View.VISIBLE);
-                    noSavedNewsLayout.setVisibility(View.GONE);
-
-
-                    List<String> finalArticleIds = new ArrayList<>(bookmarkedArticleIds);
-
-                    // Firestore's whereIn clause has a limit of 10. If a user has more, you need to chunk the list.
-                    if (finalArticleIds.size() > 10) {
-                        Log.w(TAG, "User has more than 10 bookmarks. Only fetching the first 10 due to whereIn limit.");
-                        finalArticleIds = finalArticleIds.subList(0, 10);
-                    }
-
-                    db.collection("articles")
-                        .whereIn(FieldPath.documentId(), finalArticleIds)
-                        .orderBy("createdAt", Query.Direction.DESCENDING)
-                        .get()
-                        .addOnCompleteListener(articleTask -> {
-                            if (articleTask.isSuccessful()) {
-                                List<NewsItem> fetchedBookmarkedNews = new ArrayList<>();
-                                SimpleDateFormat sdf = new SimpleDateFormat("yyyy-MM-dd", Locale.getDefault());
-
-                                for (QueryDocumentSnapshot document : articleTask.getResult()) {
-                                    try {
-                                        String articleId = document.getId();
-                                        String title = document.getString("title");
-                                        String category = document.getString("category");
-                                        String content = document.getString("content");
-                                        Timestamp timestamp = document.getTimestamp("createdAt");
-                                        String postedDate = (timestamp != null) ? sdf.format(timestamp.toDate()) : "Unknown Date";
-                                        String imageUrl = document.getString("imageUrl");
-
-                                        int imageResId = R.drawable.news_placeholder; // Default placeholder
-
-                                        if (title != null && category != null && content != null) {
-                                            fetchedBookmarkedNews.add(new NewsItem(articleId, title, postedDate, imageResId, category, content, imageUrl));
-                                        } else {
-                                            Log.w(TAG, "Skipping bookmarked article with missing fields: " + document.getId());
-                                        }
-                                    } catch (Exception e) {
-                                        Log.e(TAG, "Error parsing bookmarked article document " + document.getId() + ": " + e.getMessage(), e);
-                                    }
-                                }
-                                allNewsItems.clear();
-                                allNewsItems.addAll(fetchedBookmarkedNews);
-                                Log.d(TAG, "Fetched " + allNewsItems.size() + " bookmarked news items.");
-
-                                Chip selectedChip = findViewById(categoryChipGroup.getCheckedChipIds().isEmpty() ? R.id.chipAll : categoryChipGroup.getCheckedChipIds().get(0));
-                                if (selectedChip != null) {
-                                    filterNewsByCategory(selectedChip.getText().toString());
-                                } else {
-                                    filterNewsByCategory("All");
-                                }
-
-                                // After fetching and updating the list, check if it's still empty
-                                hasSavedNews = !allNewsItems.isEmpty(); // Update the flag
-                                if (!hasSavedNews) { // If still no saved news after fetching articles
-                                    chipScrollView.setVisibility(View.GONE);
-                                    savedNewsRecyclerView.setVisibility(View.GONE);
-                                    noSavedNewsLayout.setVisibility(View.VISIBLE);
-                                } else {
-                                    chipScrollView.setVisibility(View.VISIBLE);
-                                    savedNewsRecyclerView.setVisibility(View.VISIBLE);
-                                    noSavedNewsLayout.setVisibility(View.GONE);
-                                }
-                                invalidateOptionsMenu(); // Invalidate to update menu visibility
-
-                            } else {
-                                Log.e(TAG, "Error getting bookmarked articles: ", articleTask.getException());
-                                Toast.makeText(SavedNewsActivity.this, R.string.failed_to_load_bookmarks, Toast.LENGTH_SHORT).show();
-                                allNewsItems.clear();
-                                newsAdapter.setNewsList(allNewsItems);
-                                // On error, revert to "No saved news" state and update flag
-                                hasSavedNews = false;
-                                chipScrollView.setVisibility(View.GONE);
-                                savedNewsRecyclerView.setVisibility(View.GONE);
-                                noSavedNewsLayout.setVisibility(View.VISIBLE);
-                                invalidateOptionsMenu(); // Invalidate to update menu visibility
+                .whereEqualTo("userId", currentUserId)
+                .get()
+                .addOnCompleteListener(bookmarkTask -> {
+                    if (bookmarkTask.isSuccessful()) {
+                        List<String> bookmarkedArticleIds = new ArrayList<>();
+                        for (QueryDocumentSnapshot document : bookmarkTask.getResult()) {
+                            String articleId = document.getString("articleId");
+                            if (articleId != null) {
+                                bookmarkedArticleIds.add(articleId);
                             }
-                        });
+                        }
 
-                } else {
-                    Log.e(TAG, "Error getting bookmark IDs: ", bookmarkTask.getException());
-                    Toast.makeText(SavedNewsActivity.this, R.string.failed_to_load_bookmarks, Toast.LENGTH_SHORT).show();
-                    allNewsItems.clear();
-                    newsAdapter.setNewsList(allNewsItems);
-                    // On error, revert to "No saved news" state and update flag
-                    hasSavedNews = false;
-                    chipScrollView.setVisibility(View.GONE);
-                    savedNewsRecyclerView.setVisibility(View.GONE);
-                    noSavedNewsLayout.setVisibility(View.VISIBLE);
-                    invalidateOptionsMenu(); // Invalidate to update menu visibility
-                }
-            });
+                        if (bookmarkedArticleIds.isEmpty()) {
+                            Log.d(TAG, "No bookmarks found for user: " + currentUserId);
+                            updateUIForNoSavedNews(); // Helper to set correct UI state
+                            return;
+                        }
+
+                        // *** FIX STARTS HERE ***
+                        // Break down bookmarkedArticleIds into chunks of 10 for 'whereIn' queries
+                        List<List<String>> articleIdChunks = new ArrayList<>();
+                        for (int i = 0; i < bookmarkedArticleIds.size(); i += 10) {
+                            articleIdChunks.add(bookmarkedArticleIds.subList(i, Math.min(i + 10, bookmarkedArticleIds.size())));
+                        }
+
+                        List<Task<QuerySnapshot>> tasks = new ArrayList<>();
+                        for (List<String> chunk : articleIdChunks) {
+                            tasks.add(db.collection("articles")
+                                    .whereIn(FieldPath.documentId(), chunk)
+                                    .orderBy("createdAt", Query.Direction.DESCENDING)
+                                    .get());
+                        }
+
+                        Tasks.whenAllSuccess(tasks)
+                                .addOnCompleteListener(allTasks -> {
+                                    if (allTasks.isSuccessful()) {
+                                        List<NewsItem> fetchedBookmarkedNews = new ArrayList<>();
+                                        SimpleDateFormat sdf = new SimpleDateFormat("yyyy-MM-dd", Locale.getDefault());
+
+                                        for (Object result : allTasks.getResult()) {
+                                            if (result instanceof QuerySnapshot) {
+                                                QuerySnapshot querySnapshot = (QuerySnapshot) result;
+                                                for (QueryDocumentSnapshot document : querySnapshot) {
+                                                    try {
+                                                        String articleId = document.getId();
+                                                        String title = document.getString("title");
+                                                        String category = document.getString("category");
+                                                        String content = document.getString("content");
+                                                        Timestamp timestamp = document.getTimestamp("createdAt");
+                                                        String postedDate = (timestamp != null) ? sdf.format(timestamp.toDate()) : "Unknown Date";
+                                                        String imageUrl = document.getString("imageUrl");
+
+                                                        int imageResId = R.drawable.news_placeholder; // Default placeholder
+
+                                                        if (title != null && category != null && content != null) {
+                                                            fetchedBookmarkedNews.add(new NewsItem(articleId, title, postedDate, imageResId, category, content, imageUrl));
+                                                        } else {
+                                                            Log.w(TAG, "Skipping bookmarked article with missing fields: " + document.getId());
+                                                        }
+                                                    } catch (Exception e) {
+                                                        Log.e(TAG, "Error parsing bookmarked article document " + document.getId() + ": " + e.getMessage(), e);
+                                                    }
+                                                }
+                                            }
+                                        }
+
+                                        allNewsItems.clear();
+                                        allNewsItems.addAll(fetchedBookmarkedNews);
+                                        Log.d(TAG, "Fetched " + allNewsItems.size() + " bookmarked news items.");
+
+                                        hasSavedNews = !allNewsItems.isEmpty(); // Update the flag
+
+                                        // Set UI visibility based on whether articles were found
+                                        if (hasSavedNews) {
+                                            chipScrollView.setVisibility(View.VISIBLE);
+                                            savedNewsRecyclerView.setVisibility(View.VISIBLE);
+                                            noSavedNewsLayout.setVisibility(View.GONE);
+
+                                            // Apply filter based on current chip selection (or "All" if none)
+                                            Chip selectedChip = findViewById(categoryChipGroup.getCheckedChipIds().isEmpty() ? R.id.chipAll : categoryChipGroup.getCheckedChipIds().get(0));
+                                            if (selectedChip != null) {
+                                                filterNewsByCategory(selectedChip.getText().toString());
+                                            } else {
+                                                filterNewsByCategory("All");
+                                            }
+                                        } else {
+                                            updateUIForNoSavedNews(); // No saved news after fetching articles
+                                        }
+                                        invalidateOptionsMenu(); // Invalidate to update menu visibility
+
+                                    } else {
+                                        Log.e(TAG, "Error getting bookmarked articles: ", allTasks.getException());
+                                        Toast.makeText(SavedNewsActivity.this, R.string.failed_to_load_bookmarks, Toast.LENGTH_SHORT).show();
+                                        updateUIForNoSavedNews(); // Helper to set correct UI state on error
+                                    }
+                                });
+                        // *** FIX ENDS HERE ***
+
+                    } else {
+                        Log.e(TAG, "Error getting bookmark IDs: ", bookmarkTask.getException());
+                        Toast.makeText(SavedNewsActivity.this, R.string.failed_to_load_bookmarks, Toast.LENGTH_SHORT).show();
+                        updateUIForNoSavedNews(); // Helper to set correct UI state on error
+                    }
+                });
     }
+
+    // Helper method to update UI when no saved news are present
+    private void updateUIForNoSavedNews() {
+        allNewsItems.clear();
+        newsAdapter.setNewsList(allNewsItems);
+        hasSavedNews = false;
+        chipScrollView.setVisibility(View.GONE);
+        savedNewsRecyclerView.setVisibility(View.GONE);
+        noSavedNewsLayout.setVisibility(View.VISIBLE);
+        invalidateOptionsMenu(); // Invalidate to update menu visibility
+    }
+
 
     // Deletes all bookmarks for the current user from firestore.
     private void clearAllBookmarksForCurrentUser() {
@@ -330,41 +320,41 @@ public class SavedNewsActivity extends AppCompatActivity implements NewsAdapter.
         final String currentUserId = userId;
 
         db.collection("bookmarks")
-            .whereEqualTo("userId", currentUserId)
-            .get()
-            .addOnCompleteListener(task -> {
-                if (task.isSuccessful()) {
-                    WriteBatch batch = db.batch();
-                    for (QueryDocumentSnapshot document : task.getResult()) {
-                        batch.delete(document.getReference());
-                    }
+                .whereEqualTo("userId", currentUserId)
+                .get()
+                .addOnCompleteListener(task -> {
+                    if (task.isSuccessful()) {
+                        WriteBatch batch = db.batch();
+                        for (QueryDocumentSnapshot document : task.getResult()) {
+                            batch.delete(document.getReference());
+                        }
 
-                    batch.commit()
-                        .addOnSuccessListener(aVoid -> {
-                            Toast.makeText(SavedNewsActivity.this, "All saved articles cleared!", Toast.LENGTH_SHORT).show();
-                            allNewsItems.clear();
-                            newsAdapter.setNewsList(new ArrayList<>());
-                            Chip allChip = findViewById(R.id.chipAll);
-                            if (allChip != null) {
-                                allChip.setChecked(true);
-                            }
-                            Log.d(TAG, "Successfully cleared all bookmarks for user: " + currentUserId);
-                            // After clearing, show "No saved news" layout and hide chips/recycler
-                            hasSavedNews = false; // No more saved news
-                            chipScrollView.setVisibility(View.GONE);
-                            savedNewsRecyclerView.setVisibility(View.GONE);
-                            noSavedNewsLayout.setVisibility(View.VISIBLE);
-                            invalidateOptionsMenu(); // Invalidate to update menu visibility
-                        })
-                        .addOnFailureListener(e -> {
-                            Toast.makeText(SavedNewsActivity.this, R.string.failed_to_bookmark_remove + e.getMessage(), Toast.LENGTH_LONG).show();
-                            Log.e(TAG, "Error clearing bookmarks for user: " + currentUserId, e);
-                        });
-                } else {
-                    Toast.makeText(SavedNewsActivity.this, R.string.failed_to_fetch_clear_bookmark, Toast.LENGTH_SHORT).show();
-                    Log.e(TAG, "Error fetching bookmarks to clear: ", task.getException());
-                }
-            });
+                        batch.commit()
+                                .addOnSuccessListener(aVoid -> {
+                                    Toast.makeText(SavedNewsActivity.this, "All saved articles cleared!", Toast.LENGTH_SHORT).show();
+                                    allNewsItems.clear();
+                                    newsAdapter.setNewsList(new ArrayList<>());
+                                    Chip allChip = findViewById(R.id.chipAll);
+                                    if (allChip != null) {
+                                        allChip.setChecked(true);
+                                    }
+                                    Log.d(TAG, "Successfully cleared all bookmarks for user: " + currentUserId);
+                                    // After clearing, show "No saved news" layout and hide chips/recycler
+                                    hasSavedNews = false; // No more saved news
+                                    chipScrollView.setVisibility(View.GONE);
+                                    savedNewsRecyclerView.setVisibility(View.GONE);
+                                    noSavedNewsLayout.setVisibility(View.VISIBLE);
+                                    invalidateOptionsMenu(); // Invalidate to update menu visibility
+                                })
+                                .addOnFailureListener(e -> {
+                                    Toast.makeText(SavedNewsActivity.this, R.string.failed_to_bookmark_remove + e.getMessage(), Toast.LENGTH_LONG).show();
+                                    Log.e(TAG, "Error clearing bookmarks for user: " + currentUserId, e);
+                                });
+                    } else {
+                        Toast.makeText(SavedNewsActivity.this, R.string.failed_to_fetch_clear_bookmark, Toast.LENGTH_SHORT).show();
+                        Log.e(TAG, "Error fetching bookmarks to clear: ", task.getException());
+                    }
+                });
     }
 
 
