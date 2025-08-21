@@ -218,14 +218,10 @@ This project is licensed under the Apache-2.0 license - see the [LICENSE](LICENS
 
 ---
 
----
-
 <div align="center">
 
 ✨ **All Rights Reserved © 2025** ✨  
 Pubudu Ishan Wickrama Arachchi  
-
----
 
 <p>
   <a href="https://facebook.com/pubuduishandigital"><img src="https://img.shields.io/badge/-Facebook-1877F2?style=for-the-badge&logo=facebook&logoColor=white"/></a>
