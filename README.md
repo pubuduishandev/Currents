@@ -2,11 +2,11 @@
 ### Faculty News & Updates - Streamlined Communication Platform
 ![Bannder](assets/banners/banner.jpeg)
 
-[![Version](https://img.shields.io/badge/version-1.0.0.1-blue.svg)](https://github.com/your-username/currents/releases)
+[![Version](https://img.shields.io/badge/version-1.0.0.1-blue.svg)](https://github.com/pubuduishandev/currents/releases)
 [![Platform](https://img.shields.io/badge/platform-Android-green.svg)](https://developer.android.com)
 [![Language](https://img.shields.io/badge/language-Java-orange.svg)](https://www.oracle.com/java/)
 [![Firebase](https://img.shields.io/badge/backend-Firebase-yellow.svg)](https://firebase.google.com)
-[![License](https://img.shields.io/badge/license-MIT-red.svg)](LICENSE)
+[![License](https://img.shields.io/badge/license-Apache%202.0-red.svg)](LICENSE)
 
 > A native Android application designed to centralize and streamline faculty-related updates, providing students and staff with real-time news delivery in an intuitive, categorized platform.
 
